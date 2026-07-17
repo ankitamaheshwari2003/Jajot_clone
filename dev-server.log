@@ -1,0 +1,13 @@
+
+> amazon-clone-web@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.172:3000
+✓ Ready in 1399ms
+Creating turbopack project {
+  dir: 'E:\\Amazon-webclone-main\\Amazon-webclone-main',
+  testMode: true
+}
+
