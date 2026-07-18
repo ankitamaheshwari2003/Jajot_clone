@@ -30,8 +30,7 @@ import ShopFilters, { getSubCategoryName } from "./Attributefilter";
 import { fetchBannerProducts, getProductsFromBannerDetail } from "../apis/banners/banners";
 
 const PRODUCTS_PER_PAGE = 20;
-//this data is used to display the products in the shop page and also to filter the products based on the category, subcategory, price, rating and attributes. The data is fetched from the backend using the fetchShopProducts function which takes the filters as parameters and returns the products and error message if any. The products are then displayed in a grid or compact view based on the user's preference. The user can also add products to their wishlist which is stored in local storage and synced with the backend.
-// Static, non-index-derived keys for the 5-star rating row (fixes S6479)
+
 const STAR_KEYS = ["star-1", "star-2", "star-3", "star-4", "star-5"];
 
 const getApiList = (payload) => {
@@ -62,7 +61,6 @@ item?.pid || item?.productId || null;
 const getLocalWishlistProductId = (item) =>
 item?.id || getWishlistProductId(item);
 
-// S2871 fix: explicit compare function using localeCompare instead of default sort()
 const compareIds = (a, b) => a.localeCompare(b);
 
 const haveSameWishlistProducts = (first = [], second = []) => {
@@ -234,6 +232,7 @@ const getStockStatus = (stock) => {
 const buildProductApiFilters = ({
   activeCategoryId,
   subcategoryId,
+  subtosubcategoryId,
   vendorId,
   minPrice,
   maxPrice,
@@ -244,6 +243,7 @@ const buildProductApiFilters = ({
 
   if (activeCategoryId) apiFilters.categoryId = activeCategoryId;
   if (subcategoryId) apiFilters.subcategoryId = subcategoryId;
+  if (subtosubcategoryId) apiFilters.subtosubcategoryId = subtosubcategoryId;
   if (vendorId) apiFilters.vendorId = vendorId;
   if (minPrice != null) apiFilters.minPrice = minPrice;
   if (maxPrice != null) apiFilters.maxPrice = maxPrice;
@@ -259,6 +259,7 @@ const fetchShopProducts = async ({
   bannerId,
   activeCategoryId,
   subcategoryId,
+  subtosubcategoryId,
   vendorId,
   minPrice,
   maxPrice,
@@ -281,6 +282,7 @@ const fetchShopProducts = async ({
   const apiFilters = buildProductApiFilters({
     activeCategoryId,
     subcategoryId,
+    subtosubcategoryId,
     vendorId,
     minPrice,
     maxPrice,
@@ -321,14 +323,11 @@ export default function ShopPage() {
     return Array.isArray(savedItems) ? savedItems : [];
   });
 
-
-
-
-
   const [filters, setFilters] = useState({
     category: "All",
     subcategory: "All",
     subcategoryId: "",
+    subtosubcategoryId: "",
     price: "All",
     minPrice: undefined,
     maxPrice: undefined,
@@ -346,7 +345,8 @@ export default function ShopPage() {
       ...prev,
       category: categoryFromUrl,
       subcategory: subcategoryFromUrl,
-      subcategoryId: ""
+      subcategoryId: "",
+      subtosubcategoryId: ""
     }));
   }, [categoryFromUrl, searchFromUrl, subcategoryFromUrl]);
 
@@ -378,6 +378,7 @@ export default function ShopPage() {
           bannerId: bannerIdFromUrl,
           activeCategoryId,
           subcategoryId: filters.subcategoryId,
+          subtosubcategoryId: filters.subtosubcategoryId,
           vendorId: vendorIdFromUrl,
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
@@ -408,6 +409,7 @@ export default function ShopPage() {
     bannerIdFromUrl,
     activeCategoryId,
     filters.subcategoryId,
+    filters.subtosubcategoryId,
     vendorIdFromUrl,
     filters.minPrice,
     filters.maxPrice,

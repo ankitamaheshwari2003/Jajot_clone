@@ -1,7 +1,7 @@
-const API_BASE = "https://amazon-multi-vendor-3.onrender.com/api";
+import { BASE_URL } from "../baseurl/baseurl";
 
 export async function fetchBanners() {
-  const res = await fetch(`${API_BASE}/banners?session_type=home_page`, {
+  const res = await fetch(`${BASE_URL}/banners?session_type=home_page`, {
     cache: "no-store",
   });
 
@@ -41,7 +41,7 @@ export function getVendorIdFromBanner(banner) {
 //   data: [ ...products tied to this banner... ]
 // }
 export async function fetchBannerProducts(bannerId) {
-  const res = await fetch(`${API_BASE}/banners/${bannerId}/products`, {
+  const res = await fetch(`${BASE_URL}/banners/${bannerId}/products`, {
     cache: "no-store",
   });
 

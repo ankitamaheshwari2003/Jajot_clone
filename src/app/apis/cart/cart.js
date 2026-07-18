@@ -116,6 +116,48 @@ export function getCartProductKey(item) {
   );
 }
 
+// NAYA — backend me categoryId/subcategoryId/subtosubcategoryId
+// "required" + ObjectId type hain, isliye hamesha ek valid 24-char
+// hex ObjectId hi bhejna hoga, warna "required" ya "Cast to ObjectId
+// failed" error aata hai
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+function isValidObjectId(value) {
+  return typeof value === "string" && OBJECT_ID_REGEX.test(value);
+}
+
+function extractId(value) {
+  if (!value) return "";
+  const id = typeof value === "object" ? value?._id || value?.id || "" : String(value);
+  return isValidObjectId(id) ? id : "";
+}
+
+export function getCartCategoryId(item) {
+  return extractId(
+    item?.categoryId ||
+    (item?.pid && typeof item.pid === "object" ? item.pid.categoryId : null) ||
+    (item?.productId && typeof item.productId === "object" ? item.productId.categoryId : null)
+  );
+}
+
+export function getCartSubcategoryId(item) {
+  return extractId(
+    item?.subcategoryId ||
+    item?.subCategoryId ||
+    (item?.pid && typeof item.pid === "object" ? item.pid.subcategoryId : null) ||
+    (item?.productId && typeof item.productId === "object" ? item.productId.subcategoryId : null)
+  );
+}
+
+export function getCartSubToSubcategoryId(item) {
+  return extractId(
+    item?.subtosubcategoryId ||
+    item?.subtosubcategoryid ||
+    (item?.pid && typeof item.pid === "object" ? item.pid.subtosubcategoryId : null) ||
+    (item?.productId && typeof item.productId === "object" ? item.productId.subtosubcategoryId : null)
+  );
+}
+
 export function buildCartUpdatePayload(
   item,
   cid = getLoggedInCid(),
@@ -140,8 +182,17 @@ export async function createCartItem({
   variantId = null,
   offerDiscount = 0,
   vendorId = null,
+  categoryId = "",
+  subcategoryId = "",
+  subtosubcategoryId = "",
 } = {}) {
   const finalDivid = divid || getCartDeviceId();
+
+  // FALLBACK HATAYA — ab sirf jo actual id product/param se aayi hai
+  // wahi bheji jayegi, categoryId se copy/fallback nahi hoga
+  const validCategoryId = extractId(categoryId);
+  const validSubcategoryId = extractId(subcategoryId);
+  const validSubToSubcategoryId = extractId(subtosubcategoryId);
 
   const payload = {
     cid: cid || null,
@@ -153,6 +204,10 @@ export async function createCartItem({
     venderid: vendorId,
   };
 
+  if (validCategoryId) payload.categoryId = validCategoryId;
+  if (validSubcategoryId) payload.subcategoryId = validSubcategoryId;
+  if (validSubToSubcategoryId) payload.subtosubcategoryId = validSubToSubcategoryId;
+
   return api.post("/cart/create", payload);
 }
 
@@ -160,6 +215,12 @@ export async function updateCartItem(id, data = {}) {
   if (!id) {
     return makeEmptyCartResponse();
   }
+
+  // FALLBACK HATAYA — same as createCartItem, ab categoryId se
+  // subcategory/subtosubcategory copy nahi hoga
+  const validCategoryId = extractId(data.categoryId);
+  const validSubcategoryId = extractId(data.subcategoryId);
+  const validSubToSubcategoryId = extractId(data.subtosubcategoryId);
 
   const payload = {
     cid: data.cid ?? getLoggedInCid() ?? null,
@@ -181,6 +242,10 @@ export async function updateCartItem(id, data = {}) {
       data.venderid ??
       getCartVendorId(data),
   };
+
+  if (validCategoryId) payload.categoryId = validCategoryId;
+  if (validSubcategoryId) payload.subcategoryId = validSubcategoryId;
+  if (validSubToSubcategoryId) payload.subtosubcategoryId = validSubToSubcategoryId;
 
   try {
     return await api.put(`/cart/update/${id}`, payload);
@@ -451,6 +516,10 @@ export async function syncDeviceCartToCustomer(
             vendorId:
               getCartVendorId(existing) ||
               vendorId,
+            categoryId: getCartCategoryId(existing) || getCartCategoryId(item),
+            subcategoryId: getCartSubcategoryId(existing) || getCartSubcategoryId(item),
+            subtosubcategoryId:
+              getCartSubToSubcategoryId(existing) || getCartSubToSubcategoryId(item),
           });
         } else {
           await createCartItem({
@@ -465,6 +534,9 @@ export async function syncDeviceCartToCustomer(
               item?.discount ||
               0,
             vendorId,
+            categoryId: getCartCategoryId(item),
+            subcategoryId: getCartSubcategoryId(item),
+            subtosubcategoryId: getCartSubToSubcategoryId(item),
           });
         }
 

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,180 +10,121 @@ import {
   Star } from
 "lucide-react";
 
-const sections = [
-{
-  badge: "Trending",
-  title: "Gaming Setup",
-  subtitle: "Premium accessories collection",
-  button: "Shop Now",
-  bg: "bg-[#f4f7ff]",
-  items: [
-  {
-    name: "Gaming Chair",
-    image:
-    "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=1000&auto=format&fit=crop",
-    price: "$299"
-  },
-  {
-    name: "RGB Keyboard",
-    image:
-    "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=1000&auto=format&fit=crop",
-    price: "$149"
-  },
-  {
-    name: "Gaming Mouse",
-    image:
-    "https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=1000&auto=format&fit=crop",
-    price: "$89"
-  },
-  {
-    name: "4K Monitor",
-    image:
-    "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1000&auto=format&fit=crop",
-    price: "$499"
-  }]
-
-},
-
-{
-  badge: "Luxury",
-  title: "Modern Decor",
-  subtitle: "Minimal premium interiors",
-  button: "Explore",
-  bg: "bg-[#fff6ef]",
-  items: [
-  {
-    name: "Luxury Sofa",
-    image:
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1000&auto=format&fit=crop",
-    price: "$799"
-  },
-  {
-    name: "Designer Lamp",
-    image:
-    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1000&auto=format&fit=crop",
-    price: "$199"
-  },
-  {
-    name: "Wood Table",
-    image:
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1000&auto=format&fit=crop",
-    price: "$259"
-  },
-  {
-    name: "Modern Interior",
-    image:
-    "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop",
-    price: "$399"
-  }]
-
-},
-
-{
-  badge: "Hot Deals",
-  title: "Smart Home",
-  subtitle: "Upgrade your home setup",
-  button: "View Deals",
-  bg: "bg-[#f4fff8]",
-  items: [
-  {
-    name: "Air Conditioner",
-    image:
-    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1000&auto=format&fit=crop",
-    price: "$599"
-  },
-  {
-    name: "Microwave",
-    image:
-    "https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?q=80&w=1000&auto=format&fit=crop",
-    price: "$129"
-  },
-  {
-    name: "Washing Machine",
-    image:
-    "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?q=80&w=1000&auto=format&fit=crop",
-    price: "$349"
-  },
-  {
-    name: "Refrigerator",
-    image:
-    "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?q=80&w=1000&auto=format&fit=crop",
-    price: "$899"
-  }]
-
-},
-
-{
-  badge: "New Arrival",
-  title: "Fashion Wear",
-  subtitle: "Trending styles collection",
-  button: "Discover",
-  bg: "bg-[#fff4fb]",
-  items: [
-  {
-    name: "Luxury Watch",
-    image:
-    "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=1000&auto=format&fit=crop",
-    price: "$499"
-  },
-  {
-    name: "Sneakers",
-    image:
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop",
-    price: "$179"
-  },
-  {
-    name: "Perfume",
-    image:
-    "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000&auto=format&fit=crop",
-    price: "$89"
-  },
-  {
-    name: "Fashion Wear",
-    image:
-    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=1000&auto=format&fit=crop",
-    price: "$129"
-  }]
-
-}];
+import { getCategories } from "../apis/category/category";
+import { fetchFilteredProducts } from "../apis/products/products";
 
 
-const trendingProducts = [
-{
-  title: "Gaming Mouse",
-  category: "Electronics",
-  image:
-  "https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=1000&auto=format&fit=crop",
-  price: "$89",
-  bg: "bg-[#f4f7ff]"
-},
-{
-  title: "Sneakers",
-  category: "Fashion",
-  image:
-  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop",
-  price: "$179",
-  bg: "bg-[#fff6ef]"
-},
-{
-  title: "Luxury Lamp",
-  category: "Decor",
-  image:
-  "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1000&auto=format&fit=crop",
-  price: "$149",
-  bg: "bg-[#f4fff8]"
-},
-{
-  title: "Smart Watch",
-  category: "Lifestyle",
-  image:
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop",
-  price: "$249",
-  bg: "bg-[#fff4fb]"
-}];
+function extractCategoryList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.categories)) return payload.categories;
+  return [];
+}
 
+function normalizeCategory(category) {
+  if (!category) return null;
+  return {
+    id: category?._id || category?.id,
+    name: category?.name || "Category",
+    slug: category?.slug || "",
+    description: category?.description || ""
+  };
+}
+
+const STYLE_PRESETS = [
+{ badge: "Trending", subtitle: "Handpicked for you", button: "Shop Now", bg: "bg-[#f4f7ff]" },
+{ badge: "Popular", subtitle: "Customer favorites", button: "Explore", bg: "bg-[#fff6ef]" },
+{ badge: "Hot Deals", subtitle: "Best value picks", button: "View Deals", bg: "bg-[#f4fff8]" },
+{ badge: "New Arrival", subtitle: "Fresh additions", button: "Discover", bg: "bg-[#fff4fb]" }];
+
+
+const VISIBLE_CATEGORY_COUNT = 4;
+const PRODUCTS_PER_CATEGORY = 4;
+
+function pickRandomCategories(categories, count) {
+  const shuffled = [...categories].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 export default function PremiumCategorySections() {
+  const [sections, setSections] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSections() {
+      try {
+        const response = await getCategories();
+        const categories = extractCategoryList(response?.data)
+          .filter((category) => !category?.isDeleted && category?.status !== "inactive")
+          .map(normalizeCategory)
+          .filter((category) => category?.id);
+
+        const randomCategories = pickRandomCategories(
+          categories,
+          VISIBLE_CATEGORY_COUNT
+        );
+
+        const builtSections = await Promise.all(
+          randomCategories.map(async (category, index) => {
+            const preset = STYLE_PRESETS[index % STYLE_PRESETS.length];
+
+            let products = [];
+            try {
+              products = await fetchFilteredProducts({
+                categoryId: category.id
+              });
+            } catch (error) {
+              console.warn(
+                "Products fetch failed for category:",
+                category.name,
+                error?.message
+              );
+            }
+
+            const items = products.slice(0, PRODUCTS_PER_CATEGORY).map(
+              (product, productIndex) => ({
+                id: product.id || `${category.id}-${productIndex}`,
+                name: product.name,
+                image: product.image,
+                price: `₹${Number(product.price || 0).toLocaleString("en-IN")}`
+              })
+            );
+
+            return {
+              id: category.id,
+              badge: preset.badge,
+              title: category.name,
+              subtitle: category.description || preset.subtitle,
+              button: preset.button,
+              bg: preset.bg,
+              href: category.slug ?
+              `/shop?category=${category.slug}` :
+              `/shop?categoryId=${category.id}`,
+              items
+            };
+          })
+        );
+
+        if (isMounted) {
+          setSections(builtSections.filter((section) => section.items.length > 0));
+        }
+      } catch (error) {
+        console.warn("Categories fetch failed:", error?.message);
+        if (isMounted) setSections([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadSections();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="bg-[#eceff1] py-6 lg:py-8">
 
@@ -209,9 +151,17 @@ export default function PremiumCategorySections() {
         {}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
-          {sections.map((section) =>
+          {isLoading &&
+          Array.from({ length: VISIBLE_CATEGORY_COUNT }).map((_, index) =>
           <div
-            key={section.title}
+            key={`skeleton-${index}`}
+            className="rounded-[28px] p-3.5 border border-black/5 bg-white/60 animate-pulse h-[340px]" />
+
+          )}
+
+          {!isLoading && sections.map((section) =>
+          <div
+            key={section.id}
             className={`group relative overflow-hidden rounded-[28px] p-3.5 border border-black/5 ${section.bg}
               shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300`}>
             
@@ -243,7 +193,7 @@ export default function PremiumCategorySections() {
 
                 {section.items.map((item) =>
               <div
-                key={item.name}
+                key={item.id}
                 className="group/item">
                 
                     <div className="overflow-hidden rounded-[18px] bg-white border border-black/5">
@@ -300,7 +250,7 @@ export default function PremiumCategorySections() {
 
               {}
               <Link
-              href="/shop"
+              href={section.href}
               className="mt-3 h-9 rounded-[14px] bg-black text-white flex items-center justify-between px-3.5 text-[11px] font-bold hover:bg-orange-500 transition-all duration-300">
               
                 {section.button}

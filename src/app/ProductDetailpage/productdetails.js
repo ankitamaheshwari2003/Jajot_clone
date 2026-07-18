@@ -431,6 +431,22 @@ export default function productDetailsPage({
       delivery: "Tomorrow"
     };
 
+    const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+    const asId = (value) => {
+      if (!value) return "";
+      const id = typeof value === "object" ? value?._id || value?.id || "" : String(value);
+      return OBJECT_ID_REGEX.test(id) ? id : "";
+    };
+
+    const resolvedCategoryId =
+    asId(product.categoryId) || asId(product.category);
+
+    const resolvedSubcategoryId =
+    asId(product.subcategoryId);
+
+    const resolvedSubToSubcategoryId =
+    asId(product.subtosubcategoryId);
+
     setAddingToCart(true);
 
     setCartItems((prev) => {
@@ -490,7 +506,10 @@ export default function productDetailsPage({
           qty: nextQty,
           variantId: selectedVariant?._id || getCartVariantId(existingApiItem),
           offerDiscount: discount || product.discount || 0,
-          vendorId: resolvedVendorId
+          vendorId: resolvedVendorId,
+          categoryId: resolvedCategoryId,
+          subcategoryId: resolvedSubcategoryId,
+          subtosubcategoryId: resolvedSubToSubcategoryId
         });
 
         setCartPreviewItems([{ ...existingApiItem, qty: nextQty, quantity: nextQty }]);
@@ -503,7 +522,10 @@ export default function productDetailsPage({
           vendorId: resolvedVendorId,
           qty: safeQuantity,
           variantId: selectedVariant?._id || null,
-          offerDiscount: discount || product.discount || 0
+          offerDiscount: discount || product.discount || 0,
+          categoryId: resolvedCategoryId,
+          subcategoryId: resolvedSubcategoryId,
+          subtosubcategoryId: resolvedSubToSubcategoryId
         });
 
         try {

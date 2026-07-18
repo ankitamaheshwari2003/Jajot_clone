@@ -11,7 +11,7 @@ String(key || "").
 trim().
 toLowerCase().
 replace(/\s+/g, "_");
-// testing
+
 const normalizeFilterValue = (value) => String(value).trim().toLowerCase();
 
 export function getProductsFromPayload(payload) {
@@ -215,6 +215,18 @@ export function getProductMrp(product, variant = getDefaultVariant(product)) {
   );
 }
 
+// 👇 categoryId ki tarah ab subtosubcategoryId object/string dono handle karega
+function getSubToSubCategoryId(product) {
+  const raw =
+  product?.subtosubcategoryId ||
+  product?.subtosubcategoryid ||
+  product?.subToSubCategoryId ||
+  product?.subtoSubCategoryId;
+
+  if (!raw) return "";
+  return typeof raw === "object" ? raw?._id || raw?.id || "" : raw;
+}
+
 export function normalizeProduct(product) {
   const normalizedVariants = Array.isArray(product?.variants) ?
   product.variants.map(normalizeVariant).filter(Boolean) :
@@ -241,6 +253,10 @@ export function normalizeProduct(product) {
     product?.categoryName ||
     product?.categoryId ||
     "Products",
+    categoryId:
+    typeof product?.categoryId === "object" ?
+    product?.categoryId?._id || product?.categoryId?.id :
+    product?.categoryId,
     subcategory:
     product?.subcategory?.name ||
     product?.subCategory?.name ||
@@ -255,6 +271,13 @@ export function normalizeProduct(product) {
     product?.subcategoryId ||
     product?.subCategoryId ||
     "",
+    subcategoryId:
+    typeof (product?.subcategoryId || product?.subCategoryId) === "object" ?
+    (product?.subcategoryId || product?.subCategoryId)?._id ||
+    (product?.subcategoryId || product?.subCategoryId)?.id :
+    product?.subcategoryId || product?.subCategoryId || "",
+    // 👇 NAYA — subtosubcategory id normalize karke bhej rahe hain
+    subtosubcategoryId: getSubToSubCategoryId(product),
     attributes,
     price,
     mrp,
@@ -371,6 +394,11 @@ export async function fetchProducts(filters = {}) {
     params.set("subcategoryId", filters.subcategoryId);
   }
 
+  // 👇 NAYA
+  if (filters.subtosubcategoryId) {
+    params.set("subtosubcategoryId", filters.subtosubcategoryId);
+  }
+
   if (params.toString()) {
     urls.unshift(`${PRODUCT_API_URL}?${params.toString()}`);
   }
@@ -425,7 +453,6 @@ export async function fetchProducts(filters = {}) {
 export async function fetchFilteredProducts(filters = {}) {
   const params = new URLSearchParams();
 
-
   params.set("stockStatus", "in_stock");
   params.set("productActive", "true");
   params.set("variantActive", "true");
@@ -445,19 +472,11 @@ export async function fetchFilteredProducts(filters = {}) {
 
   setIfPresent("categoryId", filters.categoryId);
   setIfPresent("subcategoryId", filters.subcategoryId);
+  setIfPresent("subtosubcategoryId", filters.subtosubcategoryId); // 👈 NAYA
   setIfPresent("vendorId", filters.vendorId);
   setIfPresent("q", filters.search);
   setIfPresent("minPrice", filters.minPrice);
   setIfPresent("maxPrice", filters.maxPrice);
-
-
-
-
-
-
-
-
-
 
   if (filters.attributes && typeof filters.attributes === "object") {
     Object.entries(filters.attributes).forEach(([code, value]) => {

@@ -1,4 +1,4 @@
-﻿const BASE_URL = "https://amazon-multi-vendor-3.onrender.com/api";
+import { BASE_URL } from "../baseurl/baseurl";
 
 export async function getCategoryAttributes(categoryId) {
   if (!categoryId) return [];

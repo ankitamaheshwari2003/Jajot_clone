@@ -1,7 +1,5 @@
-﻿import axios from "axios";
-
-const BASE_URL = "https://amazon-multi-vendor-3.onrender.com/api/endusers";
+import { api } from "../baseurl/baseurl";
 
 export const userLogin = async (data) => {
-  return axios.post(`${BASE_URL}/endlogin`, data);
+  return api.post("/endusers/endlogin", data);
 };

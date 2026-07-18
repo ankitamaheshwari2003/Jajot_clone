@@ -1,176 +1,38 @@
 ﻿"use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-const products = [
-{
-  id: 1,
-  title: "Premium Headphones",
-  category: "Audio",
-  price: "₹2,499",
-  oldPrice: "₹3,999",
-  rating: 4.9,
-  image:
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 2,
-  title: "Luxury Smart Watch",
-  category: "Wearables",
-  price: "₹4,999",
-  oldPrice: "₹6,999",
-  rating: 4.8,
-  image:
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 3,
-  title: "Gaming Mouse",
-  category: "Gaming",
-  price: "₹1,299",
-  oldPrice: "₹2,199",
-  rating: 4.7,
-  image:
-  "https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 4,
-  title: "Laptop Stand",
-  category: "Accessories",
-  price: "₹999",
-  oldPrice: "₹1,499",
-  rating: 4.6,
-  image:
-  "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 5,
-  title: "Bluetooth Speaker",
-  category: "Speaker",
-  price: "₹3,499",
-  oldPrice: "₹4,499",
-  rating: 5.0,
-  image:
-  "https://images.unsplash.com/photo-1589003077984-894e133dabab?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 6,
-  title: "Wireless Keyboard",
-  category: "Accessories",
-  price: "₹2,199",
-  oldPrice: "₹3,099",
-  rating: 4.5,
-  image:
-  "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 7,
-  title: "DSLR Camera",
-  category: "Photography",
-  price: "₹52,999",
-  oldPrice: "₹59,999",
-  rating: 4.9,
-  image:
-  "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 8,
-  title: "VR Headset",
-  category: "Gaming",
-  price: "₹12,499",
-  oldPrice: "₹15,999",
-  rating: 4.8,
-  image:
-  "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 9,
-  title: "Premium Headphones",
-  category: "Audio",
-  price: "₹2,499",
-  oldPrice: "₹3,999",
-  rating: 4.9,
-  image:
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 10,
-  title: "Luxury Smart Watch",
-  category: "Wearables",
-  price: "₹4,999",
-  oldPrice: "₹6,999",
-  rating: 4.8,
-  image:
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 11,
-  title: "Gaming Mouse",
-  category: "Gaming",
-  price: "₹1,299",
-  oldPrice: "₹2,199",
-  rating: 4.7,
-  image:
-  "https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 12,
-  title: "Laptop Stand",
-  category: "Accessories",
-  price: "₹999",
-  oldPrice: "₹1,499",
-  rating: 4.6,
-  image:
-  "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 13,
-  title: "Bluetooth Speaker",
-  category: "Speaker",
-  price: "₹3,499",
-  oldPrice: "₹4,499",
-  rating: 5.0,
-  image:
-  "https://images.unsplash.com/photo-1589003077984-894e133dabab?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 14,
-  title: "Wireless Keyboard",
-  category: "Accessories",
-  price: "₹2,199",
-  oldPrice: "₹3,099",
-  rating: 4.5,
-  image:
-  "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 15,
-  title: "DSLR Camera",
-  category: "Photography",
-  price: "₹52,999",
-  oldPrice: "₹59,999",
-  rating: 4.9,
-  image:
-  "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1200&auto=format&fit=crop"
-},
-{
-  id: 16,
-  title: "VR Headset",
-  category: "Gaming",
-  price: "₹12,499",
-  oldPrice: "₹15,999",
-  rating: 4.8,
-  image:
-  "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?q=80&w=1200&auto=format&fit=crop"
-}];
+const DEVICE_ID = "25b673c2-d50c-41e8-94aa-5f86053254cc";
+const API_BASE = "https://amazon-multi-vendor-3.onrender.com";
+const FALLBACK_LIMIT = 12; // cart empty hone par max itne hi product lene hain
 
+// Raw API product ko slider ke card-friendly shape mein convert karta hai
+function normalizeProduct(p) {
+  const category =
+    typeof p.categoryId === "object" && p.categoryId !== null
+      ? p.categoryId.name
+      : p.brandName || p.productType || "Product";
+
+  const image =
+    Array.isArray(p.images) && p.images.length > 0
+      ? p.images[0]
+      : "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop";
+
+  return {
+    id: p._id,
+    title: p.productName || p.itemName || "Product",
+    category,
+    image
+  };
+}
 
 export default function ProductSlider() {
   const sliderRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const cardWidth = 220;
 
@@ -181,6 +43,54 @@ export default function ProductSlider() {
     setCanScrollLeft(el.scrollLeft > 5);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
   };
+
+  // Cart mein item ho -> recommendations API se data
+  // Cart empty ho -> /api/products se (max FALLBACK_LIMIT products)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        const recRes = await fetch(
+          `${API_BASE}/api/cart/device/${DEVICE_ID}/recommendations`
+        );
+        const recJson = await recRes.json();
+
+        const hasCartData =
+          recJson?.success &&
+          Array.isArray(recJson.data) &&
+          recJson.data.length > 0 &&
+          (recJson.cartCategories > 0 || recJson.cartSubcategories > 0);
+
+        if (hasCartData) {
+          if (!cancelled) {
+            setProducts(recJson.data.map(normalizeProduct));
+          }
+          return;
+        }
+
+        // Cart empty -> fallback to general products list
+        const prodRes = await fetch(`${API_BASE}/api/products`);
+        const prodJson = await prodRes.json();
+        const list = Array.isArray(prodJson?.data) ? prodJson.data : [];
+
+        if (!cancelled) {
+          setProducts(list.slice(0, FALLBACK_LIMIT).map(normalizeProduct));
+        }
+      } catch (err) {
+        console.error("Failed to load slider products:", err);
+        if (!cancelled) setProducts([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     updateArrows();
@@ -194,7 +104,7 @@ export default function ProductSlider() {
       el.removeEventListener("scroll", updateArrows);
       window.removeEventListener("resize", updateArrows);
     };
-  }, []);
+  }, [products]);
 
   const scroll = (direction) => {
     if (!sliderRef.current) return;
@@ -203,6 +113,10 @@ export default function ProductSlider() {
       behavior: "smooth"
     });
   };
+
+  if (!loading && products.length === 0) {
+    return null;
+  }
 
   return (
     <section className="mx-auto my-8 max-w-[1450px] rounded-3xl bg-[#FDEDE0] px-3 py-7 sm:my-12 sm:px-6 sm:py-9 lg:px-10">
@@ -248,12 +162,15 @@ export default function ProductSlider() {
           className="text-left group flex-shrink-0 w-[42%] sm:w-[170px] snap-start">
           
             <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white">
-              <Image
+              <img
               src={product.image}
               alt={product.title}
-              fill
-              sizes="(max-width: 639px) 42vw, 170px"
-              className="object-cover group-hover:scale-105 transition-transform duration-300" />
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop";
+              }}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             
             </div>
 
