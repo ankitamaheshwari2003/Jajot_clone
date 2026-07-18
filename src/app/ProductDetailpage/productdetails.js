@@ -16,6 +16,7 @@ import {
 "lucide-react";
 
 import CartSidebar from "./CartSidebar";
+import ReviewsSection from "./Reviewssection.js";
 import {
   fetchProductById,
   getProductImage,
@@ -1007,6 +1008,7 @@ export default function productDetailsPage({
                 }
               </div>
             </div>
+            
 
             <div className="order-4 h-fit lg:sticky lg:top-[11.5rem]">
               <div className="rounded-lg border border-gray-300 p-4">
@@ -1140,6 +1142,16 @@ export default function productDetailsPage({
           </button>
         </div>
       </main>
+
+      
+              {/* Reviews section - added, rest of the page untouched */}
+              <div className="py-5">
+                <ReviewsSection
+                  productId={product.id}
+                  variantId={selectedVariant?._id}
+                  vendorId={product.vendorId || product.venderid}
+                />
+              </div>
 
       <CartSidebar
         isOpen={cartOpen}

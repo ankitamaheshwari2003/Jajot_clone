@@ -188,8 +188,6 @@ export async function createCartItem({
 } = {}) {
   const finalDivid = divid || getCartDeviceId();
 
-  // FALLBACK HATAYA — ab sirf jo actual id product/param se aayi hai
-  // wahi bheji jayegi, categoryId se copy/fallback nahi hoga
   const validCategoryId = extractId(categoryId);
   const validSubcategoryId = extractId(subcategoryId);
   const validSubToSubcategoryId = extractId(subtosubcategoryId);
