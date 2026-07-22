@@ -73,6 +73,33 @@ const haveSameWishlistProducts = (first = [], second = []) => {
 
 };
 
+const DUMMY_IMAGE_MARKERS = [
+  "dummyimage",
+  "placeholder",
+  "placehold.co",
+  "no-image",
+  "noimage",
+  "default-product",
+  "dummy-product"
+];
+
+const isUsableProductImage = (image) => {
+  const src = String(image || "").trim();
+  if (!src) return false;
+
+  const lowerSrc = src.toLowerCase();
+  return !DUMMY_IMAGE_MARKERS.some((marker) => lowerSrc.includes(marker));
+};
+
+const getProductImage = (item) => {
+  const images = [
+    item?.image,
+    item?.thumbnail,
+    ...(Array.isArray(item?.images) ? item.images : [])
+  ];
+
+  return images.find(isUsableProductImage) || "";
+};
 
 const normalizeProduct = (item) => {
   if (!item || typeof item !== "object") return item;
@@ -84,11 +111,7 @@ const normalizeProduct = (item) => {
     id,
     rating: typeof item.rating === "number" ? item.rating : Number(item.rating) || 0,
     price: typeof item.price === "number" ? item.price : Number(item.price) || 0,
-    image:
-    item.image ||
-    item.thumbnail || (
-    Array.isArray(item.images) ? item.images[0] : "") ||
-    ""
+    image: getProductImage(item)
   };
 };
 
@@ -793,14 +816,22 @@ export default function ShopPage() {
                     {}
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100">
                       {p.image ?
+                    <>
+                      <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-gray-100 px-4 text-center text-xs font-semibold text-gray-400">
+                        Image not available
+                      </div>
                     <img
                       src={p.image}
                       alt={p.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" /> :
+                      className="absolute inset-0 z-[1] h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }} />
+                    </> :
 
 
-                    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs text-gray-400">
-                          No image available
+                    <div className="flex h-full w-full items-center justify-center bg-gray-100 px-4 text-center text-xs font-semibold text-gray-400">
+                          Image not available
                         </div>
                     }
 

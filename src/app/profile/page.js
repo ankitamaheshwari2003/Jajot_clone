@@ -318,8 +318,9 @@ export default function ProfilePage() {
 
   if (!customer) {
     return (
-      <main className="min-h-screen bg-[#f5f5f5] px-4 py-14">
-        <section className="mx-auto max-w-3xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+      <main className="min-h-screen bg-[#f5f5f5] py-14">
+        <section className="mx-auto w-full max-w-[1450px] px-3 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FF9900]/10 text-[#FF9900]">
             <User size={30} />
           </div>
@@ -333,14 +334,15 @@ export default function ProfilePage() {
             
             Go to Home
           </Link>
+          </div>
         </section>
       </main>);
 
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] px-4 py-8">
-      <section className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-[#f5f5f5] py-8">
+      <section className="mx-auto w-full max-w-[1450px] px-3 sm:px-6 lg:px-10">
         {}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">

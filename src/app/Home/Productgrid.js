@@ -46,6 +46,20 @@ function pickRandomCategories(categories, count) {
   return shuffled.slice(0, count);
 }
 
+// Fills remaining slots (up to PRODUCTS_PER_CATEGORY) with dummy "coming soon" placeholders
+function padWithDummyItems(items, categoryId) {
+  const padded = [...items];
+  let dummyIndex = 0;
+  while (padded.length < PRODUCTS_PER_CATEGORY) {
+    padded.push({
+      id: `${categoryId}-dummy-${dummyIndex}`,
+      isDummy: true
+    });
+    dummyIndex += 1;
+  }
+  return padded;
+}
+
 export default function PremiumCategorySections() {
   const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,14 +97,18 @@ export default function PremiumCategorySections() {
               );
             }
 
-            const items = products.slice(0, PRODUCTS_PER_CATEGORY).map(
+            const realItems = products.slice(0, PRODUCTS_PER_CATEGORY).map(
               (product, productIndex) => ({
                 id: product.id || `${category.id}-${productIndex}`,
                 name: product.name,
                 image: product.image,
-                price: `₹${Number(product.price || 0).toLocaleString("en-IN")}`
+                price: `₹${Number(product.price || 0).toLocaleString("en-IN")}`,
+                isDummy: false
               })
             );
+
+            // Agar kisi card mein 4 se kam products hain, to baaki slots dummy "Coming Soon" se bharo
+            const items = padWithDummyItems(realItems, category.id);
 
             return {
               id: category.id,
@@ -108,7 +126,12 @@ export default function PremiumCategorySections() {
         );
 
         if (isMounted) {
-          setSections(builtSections.filter((section) => section.items.length > 0));
+          // Ab section tabhi hide hoga jab uske paas koi bhi real product na ho
+          setSections(
+            builtSections.filter((section) =>
+              section.items.some((item) => !item.isDummy)
+            )
+          );
         }
       } catch (error) {
         console.warn("Categories fetch failed:", error?.message);
@@ -192,6 +215,33 @@ export default function PremiumCategorySections() {
               <div className="grid grid-cols-2 gap-2.5">
 
                 {section.items.map((item) =>
+              item.isDummy ?
+              (
+              // Dummy placeholder card — "Coming Soon" radiant orange text
+              <div
+                key={item.id}
+                className="overflow-hidden rounded-[18px] bg-white border border-black/5 border-dashed">
+                <div className="relative aspect-square overflow-hidden flex items-center justify-center bg-[repeating-linear-gradient(45deg,#fafafa,#fafafa_10px,#f2f2f2_10px,#f2f2f2_20px)]">
+                  <span
+                    className="coming-soon-radiant text-[13px] font-extrabold uppercase tracking-wider text-center px-2"
+                    style={{
+                      color: "#f97316",
+                      textShadow:
+                        "0 0 4px rgba(249,115,22,0.9), 0 0 10px rgba(249,115,22,0.7), 0 0 18px rgba(249,115,22,0.5), 0 0 28px rgba(249,115,22,0.35)"
+                    }}>
+                    Coming
+                    <br />
+                    Soon
+                  </span>
+                </div>
+                <div className="p-2">
+                  <div className="h-[11px] w-3/4 rounded bg-gray-100" />
+                  <div className="mt-1 h-[7px] w-1/2 rounded bg-gray-100" />
+                  <div className="mt-1.5 h-[13px] w-2/3 rounded bg-gray-100" />
+                </div>
+              </div>) :
+
+              (
               <div
                 key={item.id}
                 className="group/item">
@@ -244,7 +294,8 @@ export default function PremiumCategorySections() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div>)
+
               )}
               </div>
 
@@ -263,6 +314,22 @@ export default function PremiumCategorySections() {
 
         
       </div>
+
+      <style>{`
+        .coming-soon-radiant {
+          animation: radiant-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes radiant-pulse {
+          0%, 100% {
+            opacity: 0.75;
+            text-shadow: 0 0 4px rgba(249,115,22,0.7), 0 0 10px rgba(249,115,22,0.5), 0 0 16px rgba(249,115,22,0.35);
+          }
+          50% {
+            opacity: 1;
+            text-shadow: 0 0 8px rgba(249,115,22,1), 0 0 18px rgba(249,115,22,0.85), 0 0 32px rgba(249,115,22,0.6), 0 0 46px rgba(249,115,22,0.4);
+          }
+        }
+      `}</style>
     </div>);
 
 }

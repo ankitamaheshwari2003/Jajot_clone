@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ImagePlus,
   MessageSquareText,
@@ -58,6 +59,8 @@ function getInitials(name = "") {
     .toUpperCase();
 }
 
+const VISIBLE_REVIEWS_LIMIT = 2;
+
 export default function ReviewsSection({ productId, variantId, vendorId }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +101,11 @@ export default function ReviewsSection({ productId, variantId, vendorId }) {
   }, [productId]);
 
   const { average, count } = getReviewSummary(reviews);
+  const latestReviews = [...reviews].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+  const visibleReviews = latestReviews.slice(0, VISIBLE_REVIEWS_LIMIT);
+  const remainingReviewsCount = reviews.length - visibleReviews.length;
 
   const resetForm = () => {
     setFormRating(5);
@@ -187,6 +195,7 @@ export default function ReviewsSection({ productId, variantId, vendorId }) {
     <section className="border-t border-gray-200 bg-[#f5f5f5] px-3 py-6 sm:px-4">
       <div className="mx-auto max-w-7xl">
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          {/* Header bar */}
           <div className="flex flex-col gap-4 border-b border-gray-100 bg-[#131921] px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FF9900] text-black">
@@ -224,48 +233,72 @@ export default function ReviewsSection({ productId, variantId, vendorId }) {
 
               <button
                 onClick={() => setFormOpen((open) => !open)}
-                className="h-10 shrink-0 rounded-xl bg-[#FF9900] px-5 text-sm font-bold text-black transition hover:bg-[#e08a00]"
+                className="h-10 shrink-0 rounded-xl bg-[#FF9900] px-5 text-sm font-bold text-black transition hover:bg-[#e08a00] lg:hidden"
               >
                 {formOpen ? "Cancel" : "Write a review"}
               </button>
             </div>
           </div>
 
-          {formOpen && (
-            <form
-              onSubmit={handleSubmitReview}
-              className="m-5 rounded-2xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-4 sm:p-5"
-            >
-              <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
-                <div className="rounded-xl border border-orange-100 bg-white p-4">
-                  <p className="text-sm font-bold text-[#0F1111]">Your rating</p>
-                  <div className="mt-3 flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setFormRating(star)}
-                        aria-label={`${star} star`}
-                        className="rounded-md p-1 transition hover:bg-orange-50"
-                      >
-                        <Star
-                          size={24}
-                          className={
-                            star <= formRating ? "text-[#FF9900]" : "text-gray-300"
-                          }
-                          fill={star <= formRating ? "currentColor" : "none"}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-xs leading-5 text-gray-500">
-                    Share what worked, what did not, and whether delivery matched
-                    expectations.
+          {/* Body: left 40% = write review, right 60% = reviews list */}
+          <div className="grid grid-cols-1 lg:grid-cols-[40%_60%]">
+            {/* LEFT: write a review */}
+            <div className="border-b border-gray-100 px-5 py-5 lg:border-b-0 lg:border-r">
+              <div className="hidden items-center justify-between lg:flex">
+                <div>
+                  <p className="text-sm font-bold text-[#0F1111]">
+                    Review this product
+                  </p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    Share your thoughts with other customers
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <button
+                  onClick={() => setFormOpen((open) => !open)}
+                  className="h-10 shrink-0 rounded-xl bg-[#FF9900] px-5 text-sm font-bold text-black transition hover:bg-[#e08a00]"
+                >
+                  {formOpen ? "Cancel" : "Write a review"}
+                </button>
+              </div>
+
+              {formOpen && (
+                <form
+                  onSubmit={handleSubmitReview}
+                  className="mt-4 rounded-2xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-4 sm:p-5"
+                >
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-orange-100 bg-white p-4">
+                      <p className="text-sm font-bold text-[#0F1111]">
+                        Your rating
+                      </p>
+                      <div className="mt-3 flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setFormRating(star)}
+                            aria-label={`${star} star`}
+                            className="rounded-md p-1 transition hover:bg-orange-50"
+                          >
+                            <Star
+                              size={24}
+                              className={
+                                star <= formRating
+                                  ? "text-[#FF9900]"
+                                  : "text-gray-300"
+                              }
+                              fill={star <= formRating ? "currentColor" : "none"}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs leading-5 text-gray-500">
+                        Share what worked, what did not, and whether delivery
+                        matched expectations.
+                      </p>
+                    </div>
+
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-gray-600">
                         Your name
@@ -301,160 +334,191 @@ export default function ReviewsSection({ productId, variantId, vendorId }) {
                         </button>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                      Your review
-                    </label>
-                    <textarea
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
-                      placeholder="What did you like or dislike?"
-                      rows={4}
-                      required
-                      className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30"
-                    />
-                  </div>
-
-                  {(imageUrlInput.trim() || formImages.length > 0) && (
-                    <div className="flex flex-wrap gap-2">
-                      {imageUrlInput.trim() && (
-                        <div className="h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                          <img
-                            src={imageUrlInput.trim()}
-                            alt="preview"
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.opacity = "0.2";
-                            }}
-                            onLoad={(e) => {
-                              e.currentTarget.style.opacity = "1";
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      {formImages.map((img) => (
-                        <div
-                          key={img}
-                          className="relative h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white"
-                        >
-                          <img
-                            src={img}
-                            alt=""
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.opacity = "0.2";
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImageUrl(img)}
-                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-white transition hover:bg-black"
-                            aria-label="Remove image"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                        Your review
+                      </label>
+                      <textarea
+                        value={formDescription}
+                        onChange={(e) => setFormDescription(e.target.value)}
+                        placeholder="What did you like or dislike?"
+                        rows={4}
+                        required
+                        className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30"
+                      />
                     </div>
-                  )}
 
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {submitting ? "Submitting..." : "Submit review"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          )}
-
-          <div className="px-5 py-2">
-            {loading && (
-              <div className="py-5">
-                <div className="h-4 w-36 rounded bg-gray-100 animate-skeleton" />
-                <div className="mt-4 h-20 rounded-xl bg-gray-100 animate-skeleton" />
-              </div>
-            )}
-
-            {!loading && error && (
-              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                {error}
-              </p>
-            )}
-
-            {!loading && !error && reviews.length === 0 && (
-              <div className="my-5 rounded-xl border border-dashed border-gray-300 p-8 text-center">
-                <MessageSquareText className="mx-auto mb-3 text-[#FF9900]" size={28} />
-                <p className="text-sm font-semibold text-gray-700">No reviews yet</p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Be the first to review this product.
-                </p>
-              </div>
-            )}
-
-            {!loading &&
-              reviews.map((review) => {
-                const reviewerName = review.userName || "Amazon Customer";
-                const reviewerInitials = getInitials(reviewerName);
-
-                return (
-                  <article
-                    key={review._id}
-                    className="border-b border-gray-100 py-5 last:border-b-0"
-                  >
-                    <div className="flex gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF9900]/10 text-sm font-black text-[#FF9900]">
-                        {reviewerInitials || <UserRound size={18} />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-[#0F1111]">
-                            {reviewerName}
-                          </p>
-                          <RatingBadge rating={review.rating || 0} />
-                        </div>
-
-                        <p className="mt-1 text-xs text-gray-500">
-                          Reviewed in India on {formatReviewDate(review.createdAt)}
-                        </p>
-
-                        <p className="mt-3 max-w-3xl text-[15px] leading-6 text-[#0F1111]">
-                          {review.description}
-                        </p>
-
-                        {Array.isArray(review.image) && review.image.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {review.image.map((img) => (
-                              <img
-                                key={img}
-                                src={img}
-                                alt=""
-                                className="h-20 w-20 rounded-xl border border-gray-200 bg-gray-50 object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                }}
-                              />
-                            ))}
+                    {(imageUrlInput.trim() || formImages.length > 0) && (
+                      <div className="flex flex-wrap gap-2">
+                        {imageUrlInput.trim() && (
+                          <div className="h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <img
+                              src={imageUrlInput.trim()}
+                              alt="preview"
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.opacity = "0.2";
+                              }}
+                              onLoad={(e) => {
+                                e.currentTarget.style.opacity = "1";
+                              }}
+                            />
                           </div>
                         )}
 
-                        <button className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 transition hover:border-[#FF9900] hover:text-[#FF9900]">
-                          <ThumbsUp size={13} />
-                          Helpful
-                        </button>
+                        {formImages.map((img) => (
+                          <div
+                            key={img}
+                            className="relative h-16 w-16 overflow-hidden rounded-lg border border-gray-200 bg-white"
+                          >
+                            <img
+                              src={img}
+                              alt=""
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.opacity = "0.2";
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImageUrl(img)}
+                              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-white transition hover:bg-black"
+                              aria-label="Remove image"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
+                    )}
+
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {submitting ? "Submitting..." : "Submit review"}
+                      </button>
                     </div>
-                  </article>
-                );
-              })}
+                  </div>
+                </form>
+              )}
+
+              {!formOpen && (
+                <div className="mt-4 hidden rounded-xl border border-dashed border-gray-300 p-6 text-center lg:block">
+                  <MessageSquareText
+                    className="mx-auto mb-2 text-[#FF9900]"
+                    size={24}
+                  />
+                  <p className="text-sm text-gray-500">
+                    Click "Write a review" to share your experience.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT: reviews list */}
+            <div className="px-5 py-2">
+              {loading && (
+                <div className="py-5">
+                  <div className="h-4 w-36 rounded bg-gray-100 animate-skeleton" />
+                  <div className="mt-4 h-20 rounded-xl bg-gray-100 animate-skeleton" />
+                </div>
+              )}
+
+              {!loading && error && (
+                <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  {error}
+                </p>
+              )}
+
+              {!loading && !error && reviews.length === 0 && (
+                <div className="my-5 rounded-xl border border-dashed border-gray-300 p-8 text-center">
+                  <MessageSquareText
+                    className="mx-auto mb-3 text-[#FF9900]"
+                    size={28}
+                  />
+                  <p className="text-sm font-semibold text-gray-700">
+                    No reviews yet
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Be the first to review this product.
+                  </p>
+                </div>
+              )}
+
+              {!loading &&
+                visibleReviews.map((review) => {
+                  const reviewerName = review.userName || "Amazon Customer";
+                  const reviewerInitials = getInitials(reviewerName);
+
+                  return (
+                    <article
+                      key={review._id}
+                      className="border-b border-gray-100 py-5 last:border-b-0"
+                    >
+                      <div className="flex gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF9900]/10 text-sm font-black text-[#FF9900]">
+                          {reviewerInitials || <UserRound size={18} />}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-[#0F1111]">
+                              {reviewerName}
+                            </p>
+                            <RatingBadge rating={review.rating || 0} />
+                          </div>
+
+                          <p className="mt-1 text-xs text-gray-500">
+                            Reviewed in India on{" "}
+                            {formatReviewDate(review.createdAt)}
+                          </p>
+
+                          <p className="mt-3 max-w-3xl text-[15px] leading-6 text-[#0F1111]">
+                            {review.description}
+                          </p>
+
+                          {Array.isArray(review.image) &&
+                            review.image.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {review.image.map((img) => (
+                                  <img
+                                    key={img}
+                                    src={img}
+                                    alt=""
+                                    className="h-20 w-20 rounded-xl border border-gray-200 bg-gray-50 object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                          <button className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 transition hover:border-[#FF9900] hover:text-[#FF9900]">
+                            <ThumbsUp size={13} />
+                            Helpful
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+
+              {!loading && !error && remainingReviewsCount > 0 && (
+                <div className="flex justify-center py-4">
+                  <Link
+                    href={`/review/${productId}`}
+                    className="inline-flex h-10 items-center rounded-xl border border-[#FF9900] px-6 text-sm font-bold text-[#FF9900] transition hover:bg-[#FF9900]/10"
+                  >
+                    View all {count} reviews
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

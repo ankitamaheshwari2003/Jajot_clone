@@ -26,11 +26,13 @@ export async function fetchProductReviews({ pid, variantId } = {}) {
   return res;
 }
 
-/**
- * POST /api/product_review
- */
+
 export async function createProductReview(payload) {
-  return axios.post(REVIEW_ENDPOINT, payload);
+  const isFormData = payload instanceof FormData;
+
+  return axios.post(REVIEW_ENDPOINT, payload, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined
+  });
 }
 
 /** Response normalize karta hai -> hamesha array return karega */

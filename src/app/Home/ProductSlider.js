@@ -1,11 +1,18 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-const DEVICE_ID = "25b673c2-d50c-41e8-94aa-5f86053254cc";
 const API_BASE = "https://amazon-multi-vendor-3.onrender.com";
 const FALLBACK_LIMIT = 12; // cart empty hone par max itne hi product lene hain
+const MIN_DISPLAY_CARDS = 6; // slider mein kam se kam itne card dikhne chahiye (khaali na lage)
+const PLACEHOLDER_TEXTS = [
+  "Explore More",
+  "Fresh Arrivals Soon",
+  "Just For You",
+  "New Products Loading"
+];
 
 // Raw API product ko slider ke card-friendly shape mein convert karta hai
 function normalizeProduct(p) {
@@ -23,16 +30,45 @@ function normalizeProduct(p) {
     id: p._id,
     title: p.productName || p.itemName || "Product",
     category,
-    image
+    image,
+    isDummy: false
   };
 }
 
-export default function ProductSlider() {
+// Products kam hon to baaki slots ko dummy "Coming Soon" cards se bharta hai (image ke bina)
+function padWithDummyCards(list) {
+  if (list.length >= MIN_DISPLAY_CARDS || list.length === 0) return list;
+
+  const padded = [...list];
+  let dummyIndex = 0;
+  while (padded.length < MIN_DISPLAY_CARDS) {
+    padded.push({
+      id: `dummy-${dummyIndex}`,
+      isDummy: true,
+      placeholderText: PLACEHOLDER_TEXTS[dummyIndex % PLACEHOLDER_TEXTS.length]
+    });
+    dummyIndex += 1;
+  }
+  return padded;
+}
+
+export default function ProductSlider({
+  title = "Trending Collection",
+  products: externalProducts,
+  loading: externalLoading
+}) {
   const sliderRef = useRef(null);
+  const router = useRouter();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Agar parent (page.js) products prop bhejta hai to wahi use karo,
+  // apna fetch mat chalao — isse 2 sliders same data 2 baar fetch nahi karenge
+  const usingExternalData = externalProducts !== undefined;
+  const [products, setProducts] = useState(externalProducts ?? []);
+  const [loading, setLoading] = useState(
+    usingExternalData ? !!externalLoading : true
+  );
 
   const cardWidth = 220;
 
@@ -44,16 +80,41 @@ export default function ProductSlider() {
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
   };
 
+  // Parent se naye products/loading aaye to state sync kar do
+  useEffect(() => {
+    if (!usingExternalData) return;
+    setProducts(externalProducts);
+    setLoading(!!externalLoading);
+  }, [usingExternalData, externalProducts, externalLoading]);
+
   // Cart mein item ho -> recommendations API se data
   // Cart empty ho -> /api/products se (max FALLBACK_LIMIT products)
+  // Ye tabhi chalega jab parent ne products prop NAHI diya (standalone use)
   useEffect(() => {
+    if (usingExternalData) return;
+
     let cancelled = false;
 
     async function loadProducts() {
+      const divid =
+        typeof window !== "undefined" ? localStorage.getItem("deviceId") : null;
+
       setLoading(true);
       try {
+        if (!divid) {
+          // Device id nahi mila -> seedha general products fallback
+          const prodRes = await fetch(`${API_BASE}/api/products`);
+          const prodJson = await prodRes.json();
+          const list = Array.isArray(prodJson?.data) ? prodJson.data : [];
+
+          if (!cancelled) {
+            setProducts(list.slice(0, FALLBACK_LIMIT).map(normalizeProduct));
+          }
+          return;
+        }
+
         const recRes = await fetch(
-          `${API_BASE}/api/cart/device/${DEVICE_ID}/recommendations`
+          `${API_BASE}/api/cart/device/${divid}/recommendations`
         );
         const recJson = await recRes.json();
 
@@ -90,7 +151,7 @@ export default function ProductSlider() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [usingExternalData]);
 
   useEffect(() => {
     updateArrows();
@@ -114,16 +175,23 @@ export default function ProductSlider() {
     });
   };
 
+  // Product card click -> detail page pe navigate
+  const goToProduct = (product) => {
+    router.push(`/ProductDetailpage/${product.id}`);
+  };
+
   if (!loading && products.length === 0) {
     return null;
   }
+
+  const displayProducts = padWithDummyCards(products);
 
   return (
     <section className="mx-auto my-8 max-w-[1450px] rounded-3xl bg-[#FDEDE0] px-3 py-7 sm:my-12 sm:px-6 sm:py-9 lg:px-10">
       {}
       <div className="flex items-center justify-between mb-6 sm:mb-8">
        <h2 className="mt-2 text-[28px] lg:text-[42px] leading-none font-extrabold text-black">
-          Trending Collection
+          {title}
         </h2>
 
         <div className="flex items-center gap-2.5">
@@ -142,12 +210,7 @@ export default function ProductSlider() {
             <ChevronRight size={16} />
           </button>
 
-          <button
-            aria-label="See all"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FF7A1A] text-white flex items-center justify-center hover:bg-[#e86c0f] transition-colors duration-200 active:scale-95">
-            
-            <ArrowRight size={18} />
-          </button>
+         
         </div>
       </div>
 
@@ -156,10 +219,33 @@ export default function ProductSlider() {
         ref={sliderRef}
         className="flex gap-5 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide pb-2">
         
-        {products.map((product) =>
+        {displayProducts.map((product) =>
+        product.isDummy ? (
+          // Dummy placeholder — image ke bina, sirf "Coming Soon" radiant orange text
+          <div
+            key={product.id}
+            className="flex-shrink-0 w-[42%] sm:w-[170px] snap-start">
+            
+            <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white border border-dashed border-orange-200 flex items-center justify-center">
+              <span
+                className="coming-soon-radiant text-[12px] font-extrabold uppercase tracking-wider text-center px-3 leading-snug"
+                style={{
+                  color: "#f97316",
+                  textShadow:
+                    "0 0 4px rgba(249,115,22,0.9), 0 0 10px rgba(249,115,22,0.7), 0 0 18px rgba(249,115,22,0.5), 0 0 28px rgba(249,115,22,0.35)"
+                }}>
+                {product.placeholderText}
+              </span>
+            </div>
+
+            <div className="mt-3 h-[10px] w-1/2 rounded bg-white/60" />
+            <div className="mt-1.5 h-[10px] w-2/3 rounded bg-white/60" />
+          </div>
+        ) : (
         <button
           key={product.id}
-          className="text-left group flex-shrink-0 w-[42%] sm:w-[170px] snap-start">
+          onClick={() => goToProduct(product)}
+          className="text-left group flex-shrink-0 w-[42%] sm:w-[170px] snap-start cursor-pointer">
           
             <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white">
               <img
@@ -181,8 +267,25 @@ export default function ProductSlider() {
               {product.title}
             </p>
           </button>
+        )
         )}
       </div>
+
+      <style>{`
+        .coming-soon-radiant {
+          animation: radiant-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes radiant-pulse {
+          0%, 100% {
+            opacity: 0.75;
+            text-shadow: 0 0 4px rgba(249,115,22,0.7), 0 0 10px rgba(249,115,22,0.5), 0 0 16px rgba(249,115,22,0.35);
+          }
+          50% {
+            opacity: 1;
+            text-shadow: 0 0 8px rgba(249,115,22,1), 0 0 18px rgba(249,115,22,0.85), 0 0 32px rgba(249,115,22,0.6), 0 0 46px rgba(249,115,22,0.4);
+          }
+        }
+      `}</style>
     </section>);
 
 }
