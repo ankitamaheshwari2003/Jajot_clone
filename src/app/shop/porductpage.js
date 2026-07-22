@@ -363,14 +363,16 @@ export default function ShopPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    setCurrentPage(1);
-    setFilters((prev) => ({
-      ...prev,
-      category: categoryFromUrl,
-      subcategory: subcategoryFromUrl,
-      subcategoryId: "",
-      subtosubcategoryId: ""
-    }));
+    queueMicrotask(() => {
+      setCurrentPage(1);
+      setFilters((prev) => ({
+        ...prev,
+        category: categoryFromUrl,
+        subcategory: subcategoryFromUrl,
+        subcategoryId: "",
+        subtosubcategoryId: ""
+      }));
+    });
   }, [categoryFromUrl, searchFromUrl, subcategoryFromUrl]);
 
   const getCategoryName = useCallback(
@@ -1013,7 +1015,7 @@ export default function ShopPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.28, ease: "easeOut" }}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 z-[99998] bg-black/50"
             onClick={() => setOpenFilter(false)} />
           
 
@@ -1022,7 +1024,7 @@ export default function ShopPage() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.46, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl p-4 h-[75vh] overflow-y-auto">
+            className="fixed bottom-0 left-0 right-0 z-[99999] h-[75vh] overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl">
             
               <div className="flex justify-between mb-4">
                 <h2 className="font-bold">Filters</h2>

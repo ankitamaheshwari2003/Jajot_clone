@@ -175,10 +175,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!customer) return;
-    setProfileForm({
-      email: customer?.email || customer?.emailId || "",
-      mobile: customer?.number || customer?.phone || customer?.mobile || "",
-      city: customer?.city || ""
+    queueMicrotask(() => {
+      setProfileForm({
+        email: customer?.email || customer?.emailId || "",
+        mobile: customer?.number || customer?.phone || customer?.mobile || "",
+        city: customer?.city || ""
+      });
     });
   }, [customer]);
 
@@ -341,39 +343,39 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] py-8">
+    <main className="min-h-screen bg-[#f5f5f5] py-4 sm:py-8">
       <section className="mx-auto w-full max-w-[1450px] px-3 sm:px-6 lg:px-10">
         {}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#FF9900] text-2xl font-black text-black">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#FF9900] text-xl font-black text-black sm:h-20 sm:w-20 sm:text-2xl">
                 {getInitials(customer?.name || customer?.fullName)}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#FF9900]">
                   My Profile
                 </p>
-                <h1 className="mt-1 text-2xl font-black text-gray-900">
+                <h1 className="mt-1 break-words text-xl font-black text-gray-900 sm:text-2xl">
                   {customer?.name || customer?.fullName || "Customer"}
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 break-all text-sm text-gray-500">
                   Customer ID: {customer?._id || customer?.id || "Not available"}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <Link
                 href="/orders"
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-800 transition hover:border-[#FF9900] hover:text-[#FF9900]">
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-800 transition hover:border-[#FF9900] hover:text-[#FF9900]">
                 
                 <Package size={16} />
                 Orders
               </Link>
               <Link
                 href="/Addtocard"
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white transition hover:bg-gray-800">
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white transition hover:bg-gray-800">
                 
                 <ShoppingBag size={16} />
                 Cart
@@ -386,13 +388,13 @@ export default function ProfilePage() {
         <div className="mt-5 grid gap-5 md:grid-cols-[260px_1fr]">
           {}
           <aside className="h-fit rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center gap-3 border-b border-gray-100 p-4">
+            <div className="flex min-w-0 items-center gap-3 border-b border-gray-100 p-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF9900]/10 text-sm font-black text-[#FF9900]">
                 {getInitials(customer?.name || customer?.fullName)}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-gray-500">Hello,</p>
-                <p className="text-sm font-bold text-gray-900">
+                <p className="truncate text-sm font-bold text-gray-900">
                   {customer?.name || customer?.fullName || "Customer"}
                 </p>
               </div>
@@ -437,10 +439,10 @@ export default function ProfilePage() {
           </aside>
 
           {}
-          <div>
+          <div className="min-w-0">
             {activeTab === "profile" &&
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
                   <h2 className="text-lg font-black text-gray-900">Personal Information</h2>
                   {!isEditingProfile &&
                 <button
@@ -454,7 +456,7 @@ export default function ProfilePage() {
                 </div>
 
                 {isEditingProfile ?
-              <form onSubmit={handleSaveProfile} className="rounded-xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-5">
+              <form onSubmit={handleSaveProfile} className="rounded-xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-4 sm:p-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label htmlFor="profile-email" className="mb-1 block text-xs font-semibold text-gray-600">
@@ -592,7 +594,7 @@ export default function ProfilePage() {
                   }
                     </div>
 
-                    <div className="mt-5 flex gap-3">
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
                     type="submit"
                     className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00]">
@@ -615,17 +617,17 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={item.label}
-                      className="rounded-xl border border-gray-200 bg-[#fafafa] p-4">
+                      className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-[#fafafa] p-4">
                       
-                          <div className="flex items-start gap-3">
+                          <div className="flex min-w-0 items-start gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FF9900]/10 text-[#FF9900]">
                               <Icon size={18} />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 {item.label}
                               </p>
-                              <p className="mt-1 text-base font-bold text-gray-900">
+                              <p className="mt-1 max-w-full [overflow-wrap:anywhere] text-sm font-bold text-gray-900 sm:text-base">
                                 {item.value}
                               </p>
                             </div>
@@ -639,13 +641,13 @@ export default function ProfilePage() {
             }
 
             {activeTab === "addresses" &&
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-lg font-black text-gray-900">Manage Addresses</h2>
                   {!showAddressForm &&
                 <button
                   onClick={openNewAddressForm}
-                  className="flex items-center gap-2 rounded-xl bg-[#FF9900] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#e08a00]">
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#FF9900] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#e08a00]">
                   
                       <Plus size={16} />
                       Add New Address
@@ -654,7 +656,7 @@ export default function ProfilePage() {
                 </div>
 
                 {showAddressForm &&
-              <form onSubmit={handleSaveAddress} className="rounded-xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-5">
+              <form onSubmit={handleSaveAddress} className="rounded-xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-4 sm:p-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="sm:col-span-1">
                         <label htmlFor="address-name" className="mb-1 block text-xs font-semibold text-gray-600">
@@ -777,7 +779,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <div className="mt-5 flex gap-3">
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
                     type="submit"
                     className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00]">
@@ -796,7 +798,7 @@ export default function ProfilePage() {
               }
 
                 {!showAddressForm && addresses.length === 0 &&
-              <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center">
+              <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center sm:p-10">
                     <MapPin className="mx-auto mb-3 text-[#FF9900]" size={28} />
                     <p className="text-sm font-semibold text-gray-700">No saved addresses yet</p>
                     <p className="mt-1 text-sm text-gray-500">
@@ -833,15 +835,15 @@ export default function ProfilePage() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-sm font-bold text-gray-900">{address.name}</p>
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="break-words text-sm font-bold text-gray-900">{address.name}</p>
+                        <p className="mt-1 break-words text-sm text-gray-600">
                           {address.addressLine}
                           {address.landmark ? `, near ${address.landmark}` : ""}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="break-words text-sm text-gray-600">
                           {address.city}, {address.state} - {address.pincode}
                         </p>
-                        <p className="mt-2 text-sm font-semibold text-gray-800">
+                        <p className="mt-2 break-words text-sm font-semibold text-gray-800">
                           Mobile: {address.mobile}
                         </p>
                       </div>

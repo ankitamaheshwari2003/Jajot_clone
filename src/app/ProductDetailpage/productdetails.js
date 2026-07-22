@@ -951,17 +951,22 @@ export default function productDetailsPage({
                 </h3>
 
                 <div className="space-y-2 text-sm">
-                  {displayAttributes.map((attribute) =>
-                  <div
-                    key={attribute._id || attribute.code || attribute.name}
-                    className="grid grid-cols-[140px_1fr] gap-3 border-b border-gray-100 py-1.5">
-                    
-                      <span className="text-[#565959]">{attribute.name}</span>
-                      <span className="text-[#0F1111]">
-                        {getDisplayValue(attribute.value)}
-                      </span>
-                    </div>
-                  )}
+                  {displayAttributes.map((attribute) => {
+  const attributeValue = getDisplayValue(attribute.value);
+  if (!attributeValue) return null;   // 👈 khali value ho to row hi render mat karo
+
+  return (
+    <div
+      key={attribute._id || attribute.code || attribute.name}
+      className="grid grid-cols-[140px_1fr] gap-3 border-b border-gray-100 py-1.5">
+      
+      <span className="text-[#565959]">{attribute.name}</span>
+      <span className="text-[#0F1111]">
+        {attributeValue}
+      </span>
+    </div>
+  );
+})}
 
                   {Object.entries(fieldLabel).map(([key, label]) => {
                     const value = key === "sku" ? displaySku : product[key];

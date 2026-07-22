@@ -143,6 +143,10 @@ function isNotRegisteredError(message = "") {
   );
 }
 
+function isInsideAnyRef(refs, target) {
+  return refs.some((ref) => ref.current?.contains(target));
+}
+
 /* ============================================================
    CUSTOM HOOK: customer auth (login / register / google / logout)
    Moving this out of Navbar() removes a large chunk of branching
@@ -162,9 +166,9 @@ function useCustomerAuth(router) {
   const [userRegisterLoading, setUserRegisterLoading] = useState(false);
 
   useEffect(() => {
-    setCustomer(getStoredCustomer());
-
     const syncCustomer = () => setCustomer(getStoredCustomer());
+    queueMicrotask(syncCustomer);
+
     window.addEventListener("customerUpdated", syncCustomer);
     window.addEventListener("storage", syncCustomer);
 
@@ -680,9 +684,11 @@ export default function Navbar() {
 
   const auth = useCustomerAuth(router);
 
-  const profileDropdownRef = useRef(null);
+  const mobileProfileDropdownRef = useRef(null);
+  const desktopProfileDropdownRef = useRef(null);
   const categoryPreviewTimeoutRef = useRef(null);
-  const searchCategoryRef = useRef(null);
+  const mobileSearchCategoryRef = useRef(null);
+  const desktopSearchCategoryRef = useRef(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState([]);
@@ -729,15 +735,19 @@ export default function Navbar() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target)
+        !isInsideAnyRef(
+          [mobileProfileDropdownRef, desktopProfileDropdownRef],
+          event.target
+        )
       ) {
         setProfileDropdownOpen(false);
       }
 
       if (
-        searchCategoryRef.current &&
-        !searchCategoryRef.current.contains(event.target)
+        !isInsideAnyRef(
+          [mobileSearchCategoryRef, desktopSearchCategoryRef],
+          event.target
+        )
       ) {
         setSearchCategoryOpen(false);
       }
@@ -840,7 +850,7 @@ export default function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-1.5">
-                  <div className="relative" ref={profileDropdownRef}>
+                  <div className="relative" ref={mobileProfileDropdownRef}>
                     <button
                       type="button"
                       onClick={toggleProfileOrLogin}
@@ -879,7 +889,7 @@ export default function Navbar() {
                 onSubmit={handleSearchSubmit}
                 className="flex h-9 w-full overflow-visible rounded-lg border-2 border-[#FF9900] bg-white transition-all duration-200 focus-within:ring-2 focus-within:ring-[#FF9900]/20 box-border"
               >
-                <div className="relative shrink-0 h-full" ref={searchCategoryRef}>
+                <div className="relative shrink-0 h-full" ref={mobileSearchCategoryRef}>
                   <button
                     type="button"
                     onClick={() => setSearchCategoryOpen((prev) => !prev)}
@@ -937,7 +947,7 @@ export default function Navbar() {
                 onSubmit={handleSearchSubmit}
                 className="flex h-11 w-full max-w-[560px] overflow-visible rounded-xl border-2 border-[#FF9900] bg-white transition-all duration-200 focus-within:ring-2 focus-within:ring-[#FF9900]/20 box-border"
               >
-                <div className="relative shrink-0 h-full" ref={searchCategoryRef}>
+                <div className="relative shrink-0 h-full" ref={desktopSearchCategoryRef}>
                   <button
                     type="button"
                     onClick={() => setSearchCategoryOpen((prev) => !prev)}
@@ -982,7 +992,7 @@ export default function Navbar() {
               </form>
 
               <div className="flex items-center gap-2 sm:gap-4">
-                <div className="relative" ref={profileDropdownRef}>
+                <div className="relative" ref={desktopProfileDropdownRef}>
                   <button
                     type="button"
                     onClick={toggleProfileOrLogin}

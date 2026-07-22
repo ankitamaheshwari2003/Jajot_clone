@@ -238,7 +238,7 @@ export default function OrdersPage() {
         </div>
         <p className="text-gray-700 font-semibold">No orders yet</p>
         <p className="text-sm text-gray-500 mt-1">
-          Once you place an order, it'll show up here.
+          Once you place an order, it&apos;ll show up here.
         </p>
         <Link
           href="/shop"
@@ -251,16 +251,16 @@ export default function OrdersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] px-4 py-6">
+    <main className="min-h-screen bg-[#f5f5f5] px-3 py-4 sm:px-4 sm:py-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 sm:mb-5 sm:p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50">
               <Package className="h-5 w-5 text-[#FF9900]" />
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">My Orders</h1>
               <p className="text-sm text-gray-500">
                 {orders.length} order{orders.length !== 1 ? "s" : ""} placed
               </p>
@@ -284,13 +284,13 @@ export default function OrdersPage() {
                     transition={{ duration: 0.35, delay: Math.min(index, 6) * 0.05, ease: "easeOut" }}
                     className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                     
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 bg-gray-50 border-b border-gray-100">
-                <div className="flex flex-wrap items-center gap-6">
-                  <div>
+              <div className="flex flex-col gap-3 bg-gray-50 px-4 py-4 border-b border-gray-100 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+                  <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-wide text-gray-400 font-medium">
                       Order
                     </p>
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="break-all text-sm font-semibold text-gray-800">
                       {order.order_number || order._id}
                     </p>
                   </div>
@@ -356,8 +356,9 @@ export default function OrdersPage() {
                 {order.items?.map((item) =>
                       <div
                         key={item._id || `${item.product_name}-${item.variant_id}`}
-                        className="flex items-center gap-3 text-sm py-2.5 first:pt-0 last:pb-0">
+                        className="flex flex-col gap-3 text-sm py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
                         
+                    <div className="flex min-w-0 items-center gap-3 sm:flex-1">
                     {item.image ?
                         <img
                           src={item.image}
@@ -381,10 +382,12 @@ export default function OrdersPage() {
                         Qty: {item.quantity || 1}
                       </p>
                     </div>
+                    </div>
 
-                    <p className="font-semibold text-gray-800 whitespace-nowrap">
-                      Rs. {item.total || item.unit_price || 0}
-                    </p>
+                    <div className="flex w-full items-center justify-between gap-3 pl-[60px] sm:w-auto sm:justify-end sm:pl-0">
+                      <p className="font-semibold text-gray-800 whitespace-nowrap">
+                        Rs. {item.total || item.unit_price || 0}
+                      </p>
 
                     {}
                     {returnedItemIds.has(item._id) ?
@@ -402,11 +405,12 @@ export default function OrdersPage() {
                         Return
                       </button>
                         }
+                    </div>
                   </div>
                       )}
               </div>
 
-              <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex flex-col gap-2 px-4 py-3.5 border-t border-gray-100 bg-gray-50/50 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                   {order.payment_method || "COD"} · {order.payment_status || "pending"}
                 </span>
@@ -433,7 +437,7 @@ export default function OrdersPage() {
                 More finds are waiting for you
               </h2>
               <p className="mt-2 text-sm leading-6 text-white/75">
-                "A good order makes today easier. A great next find makes tomorrow better."
+                &quot;A good order makes today easier. A great next find makes tomorrow better.&quot;
               </p>
             </div>
 
@@ -466,7 +470,7 @@ export default function OrdersPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3 sm:px-4"
           onClick={closeReturnModal}>
           
             <motion.div
@@ -475,7 +479,7 @@ export default function OrdersPage() {
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+            className="max-h-[calc(100dvh-24px)] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-xl">
             
               <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                 <h3 className="text-base font-bold text-gray-900">Return Item</h3>
@@ -571,12 +575,12 @@ export default function OrdersPage() {
               }
               </div>
 
-              <div className="flex items-center gap-3 border-t border-gray-100 px-5 py-4">
+              <div className="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 sm:flex-row sm:items-center">
                 <button
                 type="button"
                 onClick={closeReturnModal}
                 disabled={submitting}
-                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50">
+                className="w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition disabled:opacity-50 sm:flex-1">
                 
                   Cancel
                 </button>
@@ -584,7 +588,7 @@ export default function OrdersPage() {
                 type="button"
                 onClick={handleSubmitReturn}
                 disabled={submitting}
-                className="flex-1 rounded-xl bg-[#FF9900] py-2.5 text-sm font-bold text-black hover:bg-[#e08a00] transition disabled:opacity-60">
+                className="w-full rounded-xl bg-[#FF9900] py-2.5 text-sm font-bold text-black hover:bg-[#e08a00] transition disabled:opacity-60 sm:flex-1">
                 
                   {submitting ? "Submitting..." : "Submit Return"}
                 </button>
