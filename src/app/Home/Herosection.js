@@ -81,14 +81,7 @@ export default function HeroSection() {
             style={{ transform: `translateX(-${current * 100}%)` }}>
             
             {banners.map((banner) =>
-            // FIX (S6819): this was a <div role="button" tabIndex={0} ...>.
-            // A real <button> is the native interactive element, so we use
-            // one directly instead of faking button semantics with role.
-            // Note: a <button> can't legally contain another <button>, so
-            // the old nested "Explore Now" <button> is now a plain <span>
-            // that's styled the same way — clicking it (or anywhere else
-            // on the slide) triggers the same handleBannerClick action, so
-            // no behaviour is lost.
+           
             <button
               key={banner._id}
               type="button"

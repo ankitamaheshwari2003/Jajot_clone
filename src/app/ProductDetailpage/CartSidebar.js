@@ -17,10 +17,6 @@ export default function CartSidebar({ isOpen, onClose }) {
     setLoading(true);
 
 
-
-
-
-
     fetchNormalizedCartItems().
     then((items) => {
       if (active) setCartItems(items);

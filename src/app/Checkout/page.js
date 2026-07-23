@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
+import toast from "react-hot-toast";
 import AddressForm from "./address";
 import CartItems from "../component/CartItems";
 import OrderSummary from "../component/OrderSummary";
@@ -159,7 +160,7 @@ export default function CheckoutPage() {
 
   const handleProceedFromBag = () => {
     if (!canProceedFromBag) {
-      alert("Your cart is empty. Please add an item before checkout.");
+      toast.error("Your cart is empty. Please add an item before checkout.");
       router.replace("/Addtocard");
       return;
     }
@@ -169,14 +170,14 @@ export default function CheckoutPage() {
 
   const handleSaveAddress = async (address) => {
     if (cartItems.length === 0) {
-      alert("Your cart is empty.");
+      toast.error("Your cart is empty.");
       return;
     }
 
     const userId = getLoggedInUserId(cartItems);
 
     if (!userId) {
-      alert("Could not find a valid user id. Please log in again.");
+      toast.error("Could not find a valid user id. Please log in again.");
       return;
     }
 
@@ -198,7 +199,7 @@ export default function CheckoutPage() {
 
     if (missingVendor) {
       console.warn("vendor_id missing for item:", missingVendor);
-      alert(
+      toast.error(
         "Kuch products ke liye vendor information nahi mil paayi. Cart me wapas jaakar item remove/add karke dobara try karo."
       );
       return;
@@ -270,7 +271,7 @@ export default function CheckoutPage() {
       localStorage.removeItem("cartItems");
       window.dispatchEvent(new Event("cartUpdated"));
 
-      alert("Order placed successfully!");
+      toast.success("Order placed successfully!");
       router.push("/");
     } catch (error) {
       console.log(
@@ -278,7 +279,7 @@ export default function CheckoutPage() {
         JSON.stringify(error.response?.data, null, 2)
       );
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
         "Failed to place order. Please try again."
       );

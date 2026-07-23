@@ -14,6 +14,7 @@ replace(/\s+/g, "_");
 
 const normalizeFilterValue = (value) => String(value).trim().toLowerCase();
 
+// Normalizes product list responses from supported backend payload shapes.
 export function getProductsFromPayload(payload) {
   const products = Array.isArray(payload) ?
   payload :
@@ -45,6 +46,7 @@ export function getProductsFromPayload(payload) {
   });
 }
 
+// Normalizes product detail responses from supported backend payload shapes.
 export function getProductFromPayload(payload) {
   if (payload?.product) {
     return {
@@ -60,6 +62,7 @@ export function getProductFromPayload(payload) {
   return payload;
 }
 
+// Returns a display-ready product description string.
 export function getProductDescription(product) {
   const description = product?.description;
 
@@ -71,6 +74,7 @@ export function getProductDescription(product) {
   return "";
 }
 
+// Returns valid product bullet points from the backend description payload.
 export function getProductBulletPoints(product) {
   const bulletPoints = product?.description?.bulletPoints;
   return Array.isArray(bulletPoints) ?
@@ -78,6 +82,7 @@ export function getProductBulletPoints(product) {
   [];
 }
 
+// Returns the best product image URL or a safe fallback image.
 export function getProductImage(product, variant) {
   const images = [
   variant?.images?.[0],
@@ -87,6 +92,7 @@ export function getProductImage(product, variant) {
 
   return images.find(isValidProductImageUrl) || FALLBACK_PRODUCT_IMAGE;
 }
+// Checks whether a product image URL can be used in the UI.
 export function isValidProductImageUrl(image) {
   if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(image)) return true;
   if (!/^https?:\/\//i.test(image)) return false;
@@ -152,6 +158,7 @@ function getDetailAttributes(product) {
   );
 }
 
+// Converts a raw backend variant into the app's normalized variant shape.
 export function normalizeVariant(variant) {
   if (!variant) return null;
 
@@ -184,12 +191,14 @@ export function normalizeVariant(variant) {
   };
 }
 
+// Returns the first normalized variant for a product when available.
 export function getDefaultVariant(product) {
   return Array.isArray(product?.variants) && product.variants.length > 0 ?
   normalizeVariant(product.variants[0]) :
   null;
 }
 
+// Returns the selling price from product or variant pricing fields.
 export function getProductPrice(product, variant = getDefaultVariant(product)) {
   return Number(
     variant?.salePrice ||
@@ -203,6 +212,7 @@ export function getProductPrice(product, variant = getDefaultVariant(product)) {
   );
 }
 
+// Returns the MRP from product or variant pricing fields.
 export function getProductMrp(product, variant = getDefaultVariant(product)) {
   return Number(
     variant?.mrp ||
@@ -215,7 +225,7 @@ export function getProductMrp(product, variant = getDefaultVariant(product)) {
   );
 }
 
-// 👇 categoryId ki tarah ab subtosubcategoryId object/string dono handle karega
+// Returns a sub-to-subcategory id whether the backend sends an object or plain id.
 function getSubToSubCategoryId(product) {
   const raw =
   product?.subtosubcategoryId ||
@@ -227,6 +237,7 @@ function getSubToSubCategoryId(product) {
   return typeof raw === "object" ? raw?._id || raw?.id || "" : raw;
 }
 
+// Converts a raw backend product into the app's normalized product shape.
 export function normalizeProduct(product) {
   const normalizedVariants = Array.isArray(product?.variants) ?
   product.variants.map(normalizeVariant).filter(Boolean) :
@@ -276,7 +287,6 @@ export function normalizeProduct(product) {
     (product?.subcategoryId || product?.subCategoryId)?._id ||
     (product?.subcategoryId || product?.subCategoryId)?.id :
     product?.subcategoryId || product?.subCategoryId || "",
-    // 👇 NAYA — subtosubcategory id normalize karke bhej rahe hain
     subtosubcategoryId: getSubToSubCategoryId(product),
     attributes,
     price,
@@ -378,6 +388,7 @@ async function fetchFirstOk(urls) {
   throw lastError || new Error("Failed to load products");
 }
 
+// Fetches products from the backend products API with optional category filters.
 export async function fetchProducts(filters = {}) {
   const urls = [PRODUCT_API_URL];
   const params = new URLSearchParams();
@@ -394,7 +405,6 @@ export async function fetchProducts(filters = {}) {
     params.set("subcategoryId", filters.subcategoryId);
   }
 
-  // 👇 NAYA
   if (filters.subtosubcategoryId) {
     params.set("subtosubcategoryId", filters.subtosubcategoryId);
   }
@@ -450,6 +460,7 @@ export async function fetchProducts(filters = {}) {
 }
 
 
+// Fetches only active, in-stock products from the backend filter API.
 export async function fetchFilteredProducts(filters = {}) {
   const params = new URLSearchParams();
 
@@ -472,7 +483,7 @@ export async function fetchFilteredProducts(filters = {}) {
 
   setIfPresent("categoryId", filters.categoryId);
   setIfPresent("subcategoryId", filters.subcategoryId);
-  setIfPresent("subtosubcategoryId", filters.subtosubcategoryId); // 👈 NAYA
+  setIfPresent("subtosubcategoryId", filters.subtosubcategoryId);
   setIfPresent("vendorId", filters.vendorId);
   setIfPresent("q", filters.search);
   setIfPresent("minPrice", filters.minPrice);
@@ -506,6 +517,7 @@ export async function fetchFilteredProducts(filters = {}) {
   return products.map(normalizeProduct).filter((p) => p.id);
 }
 
+// Fetches and normalizes one product by id from the backend products API.
 export async function fetchProductById(id) {
   if (!id) return null;
 

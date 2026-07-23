@@ -1,5 +1,6 @@
-import { BASE_URL } from "../baseurl/baseurl";
+﻿import { BASE_URL } from "../baseurl/baseurl";
 
+// Fetches active filter attributes for one category from the backend API.
 export async function getCategoryAttributes(categoryId) {
   if (!categoryId) return [];
 
@@ -18,6 +19,7 @@ export async function getCategoryAttributes(categoryId) {
 }
 
 
+// Fetches products that match category, price, rating, and attribute filters.
 export async function getFilteredProducts(filters = {}) {
   const query = new URLSearchParams();
 
@@ -48,10 +50,11 @@ export async function getFilteredProducts(filters = {}) {
 }
 
 
+// Provides reusable price range options for shop filters.
 export const priceRanges = [
 { label: "All", min: undefined, max: undefined },
-{ label: "Under ₹1,000", min: undefined, max: 1000 },
-{ label: "₹1,000 - ₹5,000", min: 1000, max: 5000 },
-{ label: "₹5,000 - ₹10,000", min: 5000, max: 10000 },
-{ label: "₹10,000 - ₹20,000", min: 10000, max: 20000 },
-{ label: "Over ₹20,000", min: 20000, max: undefined }];
+{ label: "Under â‚¹1,000", min: undefined, max: 1000 },
+{ label: "â‚¹1,000 - â‚¹5,000", min: 1000, max: 5000 },
+{ label: "â‚¹5,000 - â‚¹10,000", min: 5000, max: 10000 },
+{ label: "â‚¹10,000 - â‚¹20,000", min: 10000, max: 20000 },
+{ label: "Over â‚¹20,000", min: 20000, max: undefined }];

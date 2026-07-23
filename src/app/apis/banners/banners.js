@@ -1,5 +1,6 @@
 import { BASE_URL } from "../baseurl/baseurl";
 
+// Fetches active homepage banners from the backend banner API.
 export async function fetchBanners() {
   const res = await fetch(`${BASE_URL}/banners?session_type=home_page`, {
     cache: "no-store",
@@ -18,28 +19,25 @@ export async function fetchBanners() {
   return data.data.filter((banner) => banner.is_active);
 }
 
+// Returns a safe banner list for category-based rendering.
 export function getBannersForCategory(banners) {
   return Array.isArray(banners) ? banners : [];
 }
 
+// Extracts a banner category name from supported backend response shapes.
 export function getCategoryNameFromBanner(banner) {
   const categoryName =
     banner?.categoryId?.name || banner?.categoryName || banner?.category;
   return typeof categoryName === "string" ? categoryName.trim() : "";
 }
 
+// Extracts a banner vendor id from supported backend response shapes.
 export function getVendorIdFromBanner(banner) {
   const vendorId = banner?.vendorId?._id || banner?.vendorId;
   return typeof vendorId === "string" ? vendorId.trim() : "";
 }
 
-// Real response shape from /banners/:id/products:
-// {
-//   success, message,
-//   banner: { title, discount_percentage, vendor: { _id, name, companyname }, category: { _id, name, slug } },
-//   total,
-//   data: [ ...products tied to this banner... ]
-// }
+// Fetches products attached to one banner from the backend banner-products API.
 export async function fetchBannerProducts(bannerId) {
   const res = await fetch(`${BASE_URL}/banners/${bannerId}/products`, {
     cache: "no-store",
@@ -55,20 +53,22 @@ export async function fetchBannerProducts(bannerId) {
     throw new Error("Invalid banner products response");
   }
 
-  return data; // { success, message, banner, total, data }
+  return data;
 }
 
+// Extracts the category name from a banner detail response.
 export function getCategoryNameFromBannerDetail(detail) {
   const categoryName = detail?.banner?.category?.name;
   return typeof categoryName === "string" ? categoryName.trim() : "";
 }
 
+// Extracts the vendor id from a banner detail response.
 export function getVendorIdFromBannerDetail(detail) {
   const vendorId = detail?.banner?.vendor?._id;
   return typeof vendorId === "string" ? vendorId.trim() : "";
 }
 
-// Products jo is banner ke saath tied hain, seedha response.data se milte hain.
+// Returns the product list attached to a banner detail response.
 export function getProductsFromBannerDetail(detail) {
   return Array.isArray(detail?.data) ? detail.data : [];
 }

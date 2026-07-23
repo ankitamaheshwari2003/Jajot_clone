@@ -1,8 +1,6 @@
 ﻿const skeletonClass = "animate-skeleton rounded bg-gray-200";
 
-// second argument of a .map() that produces JSX. That's what SonarQube's
-// S6479 rule actually checks for, so wrapping the index in a template
-// string inside the JSX .map() (as we tried before) does not satisfy it.
+// Generates stable skeleton keys outside JSX map callbacks.
 function generateSkeletonIds(prefix, count) {
   return Array.from({ length: count }, (_, i) => `${prefix}-${i}`);
 }

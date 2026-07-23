@@ -26,8 +26,10 @@ const findIdInObject = (value, visited = new Set()) => {
   return null;
 };
 
+// Extracts a customer id from supported login/register response shapes.
 export const extractCustomerId = (data) => findIdInObject(data);
 
+// Returns the currently logged-in customer id from browser storage.
 export const getLoggedInCid = () => {
   if (typeof window === "undefined") return null;
 
@@ -42,6 +44,7 @@ export const getLoggedInCid = () => {
   }
 };
 
+// Saves customer auth/session data in browser storage for later API calls.
 export const saveCustomerSession = (data) => {
   if (typeof window === "undefined") return null;
 
@@ -58,8 +61,6 @@ export const saveCustomerSession = (data) => {
 
   return cid;
 };
-
-// ---------- NAYA CODE: AddressForm autofill ke liye ----------
 
 const nameKeys = ["fullName", "name", "customerName", "userName"];
 const mobileKeys = [
@@ -112,6 +113,7 @@ const findAddressInObject = (value, visited = new Set()) => {
 };
 
 
+// Returns stored customer fields used to prefill checkout address forms.
 export const getLoggedInCustomerInfo = () => {
   if (typeof window === "undefined") return null;
 

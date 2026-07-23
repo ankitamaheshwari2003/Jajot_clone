@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import toast from "react-hot-toast";
 
 import {
   Search,
@@ -26,11 +27,7 @@ import { saveCustomerSession } from "../apis/customer/customer";
 import { syncDeviceCartToCustomer } from "../apis/cart/cart";
 import { syncDeviceWishlistToCustomer } from "../apis/wishlist/wishlist";
 
-/* ============================================================
-   MODULE-LEVEL HELPERS
-   Keeping these outside the component keeps Navbar()'s own
-   cognitive complexity low (SonarQube S3776).
-   ============================================================ */
+// Keeps shared navbar defaults and helpers outside the component body.
 
 const initialUserRegisterForm = {
   name: "",
@@ -101,10 +98,7 @@ function findCategoryId(categories, name) {
   return match?._id || null;
 }
 
-// NEW: builds the /shop URL for a category link, embedding both the
-// category name (for display / highlighting) and its categoryId
-// (so the shop page can call the filter API directly without having
-// to look the id up again from the name).
+// Builds a shop URL that carries both category name and category id.
 function buildCategoryHref(cat) {
   const params = new URLSearchParams();
   if (cat?._id) params.set("categoryId", cat._id);
@@ -119,8 +113,7 @@ function buildShopUrl(category, query, categories = []) {
   if (category !== "All") {
     params.set("category", category);
 
-    // NEW: attach categoryId (looked up from the categories list) so the
-    // shop page can hit /products/filter?categoryId=... directly.
+    // Adds categoryId so the shop page can call the filtered products API.
     const matchedId = findCategoryId(categories, category);
     if (matchedId) params.set("categoryId", matchedId);
   }
@@ -147,12 +140,7 @@ function isInsideAnyRef(refs, target) {
   return refs.some((ref) => ref.current?.contains(target));
 }
 
-/* ============================================================
-   CUSTOM HOOK: customer auth (login / register / google / logout)
-   Moving this out of Navbar() removes a large chunk of branching
-   logic from the main component, which is the main driver of the
-   cognitive-complexity violation.
-   ============================================================ */
+// Handles customer login, registration, Google auth, sync, and logout state.
 
 function useCustomerAuth(router) {
   const [customer, setCustomer] = useState(null);
@@ -249,16 +237,23 @@ function useCustomerAuth(router) {
       const res = await userLogin(userForm);
       await applyLoggedInCustomer(res);
 
-      alert("User Login Successfully!");
-      setUserForm({ email: "", password: "" });
+      toast.success("User Login Successfully!");
+      setUserForm({
+        email: "",
+        password: "",
+      });
+
       setUserModalOpen(false);
     } catch (error) {
-      const message = error.response?.data?.message || "Login failed";
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed";
 
       if (isNotRegisteredError(message)) {
         openUserRegister();
       } else {
-        alert(message);
+        toast.error(message);
       }
     } finally {
       setUserLoginLoading(false);
@@ -273,11 +268,11 @@ function useCustomerAuth(router) {
       const res = await userRegister(userRegisterForm);
       await applyLoggedInCustomer(res);
 
-      alert("Registration successful. You are logged in now.");
+      toast.success("Registration successful. You are logged in now.");
       setUserRegisterForm(initialUserRegisterForm);
       setUserRegisterOpen(false);
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed");
+     toast.error("Registration failed");
     } finally {
       setUserRegisterLoading(false);
     }
@@ -341,9 +336,7 @@ function useCustomerAuth(router) {
   };
 }
 
-/* ============================================================
-   SMALL PRESENTATIONAL PIECES
-   ============================================================ */
+// Renders small reusable navbar UI pieces.
 
 function CategoryDropdownList({ categories, searchCategory, onSelect }) {
   return (
@@ -432,9 +425,7 @@ function ProfileMenu({ customer, onLogout, onClose }) {
   );
 }
 
-/** Full-screen dialog backdrop. Uses a real <button> instead of a
- * <div onClick>, so it is natively keyboard-operable (fixes
- * S6848 / S1082 "non-interactive element with click handler"). */
+// Renders an accessible full-screen backdrop button for closing dialogs.
 function ModalBackdrop({ onClose }) {
   return (
     <button
@@ -620,6 +611,22 @@ function RegisterModal({ auth, hasGoogleClientId }) {
               <LabeledInput id="register-email" label="Email" type="email" name="email" value={f.email} onChange={auth.handleUserRegisterChange} placeholder="Enter email" required />
               <LabeledInput id="register-number" label="Mobile Number" name="number" value={f.number} onChange={auth.handleUserRegisterChange} placeholder="Enter mobile number" required />
               <LabeledInput id="register-password" label="Password" type="password" name="password" value={f.password} onChange={auth.handleUserRegisterChange} placeholder="Enter password" required />
+
+              <div className="sm:col-span-2">
+                <label htmlFor="register-address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  id="register-address"
+                  name="address"
+                  value={f.address}
+                  onChange={auth.handleUserRegisterChange}
+                  placeholder="Enter full address"
+                  rows={3}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#F5A623] resize-none"
+                />
+              </div>
+
               <LabeledInput id="register-city" label="City" name="city" value={f.city} onChange={auth.handleUserRegisterChange} placeholder="City" />
               <LabeledInput id="register-state" label="State" name="state" value={f.state} onChange={auth.handleUserRegisterChange} placeholder="State" />
 
@@ -670,9 +677,7 @@ function RegisterModal({ auth, hasGoogleClientId }) {
   );
 }
 
-/* ============================================================
-   MAIN COMPONENT   details and data
-   ============================================================ */
+// Renders the responsive site navbar and category navigation.
 
 export default function Navbar() {
   const router = useRouter();
@@ -697,9 +702,7 @@ export default function Navbar() {
   const [allMenuOpen, setAllMenuOpen] = useState(false);
 
   const [activeCategoryId, setActiveCategoryId] = useState(null);
-  // FIX (S6754): previous code was `const [, setPreviewCategoryId] = useState(null)`
-  // — an empty destructure. Now both value + setter are named, and the value
-  // is actually used below to highlight the hovered category.
+  // Tracks the category currently previewed by hover or focus.
   const [previewCategoryId, setPreviewCategoryId] = useState(null);
 
   const [searchCategory, setSearchCategory] = useState("All");
@@ -784,7 +787,7 @@ export default function Navbar() {
     const number = auth.customer?.number || auth.customer?.phone;
 
     if (!number) {
-      alert("Please login first.");
+     toast.error("Please login first.");
       auth.setUserModalOpen(true);
       return;
     }
@@ -793,10 +796,10 @@ export default function Navbar() {
 
     try {
       await sendWhatsAppOtp({ number });
-      alert("WhatsApp OTP sent successfully.");
+   toast.success("WhatsApp OTP sent successfully.");
     } catch (error) {
       console.error("WhatsApp OTP error:", error);
-      alert("WhatsApp OTP send failed.");
+      toast.error("WhatsApp OTP send failed.");
     } finally {
       setWhatsappOtpLoading(false);
     }
@@ -821,7 +824,7 @@ export default function Navbar() {
     }
   };
 
-  // FIX (S4624): nested template literals replaced with plain string values.
+  // Uses a lighter top bar style after the page is scrolled.
   const topBarClass = scrolled
     ? "border-t border-gray-100 overflow-x-hidden transition-colors duration-300 bg-white/30 backdrop-blur-lg"
     : "border-t border-gray-100 overflow-x-hidden transition-colors duration-300 bg-white/95 backdrop-blur-md";

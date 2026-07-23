@@ -1,6 +1,7 @@
 ﻿import { api } from "../baseurl/baseurl";
 import { getLoggedInCid } from "../customer/customer";
 
+// Returns a stable device id used for anonymous wishlist API requests.
 export function getWishlistDeviceId() {
   if (typeof window === "undefined") return "";
 
@@ -19,6 +20,7 @@ export function getWishlistDeviceId() {
   }
 }
 
+// Normalizes any wishlist API response into a plain wishlist item array.
 export function getApiWishlistList(payload) {
   try {
     if (Array.isArray(payload)) return payload;
@@ -50,6 +52,7 @@ const makeWishlistResponse = (items = []) => ({
 
 const is404 = (err) => err?.response?.status === 404;
 
+// Returns the best product id available on a wishlist item.
 export function getWishlistProductId(item) {
   const product =
   item?.pid ||
@@ -61,12 +64,14 @@ export function getWishlistProductId(item) {
   return typeof product === "object" ? product?._id || null : product || null;
 }
 
+// Returns the best variant id available on a wishlist item.
 export function getWishlistVariantId(item) {
   const variant = item?.variantId || item?.variant_id || item?.variant;
 
   return typeof variant === "object" ? variant?._id || null : variant || null;
 }
 
+// Returns the best vendor id available on a wishlist item.
 export function getWishlistVendorId(item) {
   const vendor =
   item?.vendorId ||
@@ -91,6 +96,7 @@ function dispatchWishlistUpdated() {
 
 
 
+// Creates a wishlist item through the backend wishlist API.
 export async function createWishlistItem({
   cid = getLoggedInCid(),
   pid = null,
@@ -125,6 +131,7 @@ export const addWishlistItem = createWishlistItem;
 
 
 
+// Updates a wishlist item through the backend wishlist API.
 export async function updateWishlistItem(id, data = {}) {
   if (!id) {
     return makeEmptyWishlistResponse();
@@ -156,6 +163,7 @@ export async function updateWishlistItem(id, data = {}) {
 
 
 
+// Deletes a wishlist item through the backend wishlist API.
 export async function deleteWishlistItem(id) {
   if (!id) {
     return makeEmptyWishlistResponse();
@@ -181,6 +189,7 @@ export const removeWishlistItem = deleteWishlistItem;
 
 
 
+// Fetches wishlist items for the logged-in customer from the backend API.
 export async function getCustomerWishlistItems(cid = getLoggedInCid()) {
   if (!cid) {
     return makeEmptyWishlistResponse();
@@ -201,6 +210,7 @@ export async function getCustomerWishlistItems(cid = getLoggedInCid()) {
   }
 }
 
+// Fetches wishlist items for the anonymous device from the backend API.
 export async function getDeviceWishlistItems(divid = getWishlistDeviceId()) {
   if (!divid) {
     return makeEmptyWishlistResponse();
@@ -223,6 +233,7 @@ export async function getDeviceWishlistItems(divid = getWishlistDeviceId()) {
 
 
 
+// Fetches the active wishlist by preferring customer data over device data.
 export async function getWishlistItems({
   cid = getLoggedInCid(),
   divid = getWishlistDeviceId()
@@ -246,6 +257,7 @@ export async function getWishlistItems({
   }
 }
 
+// Fetches the active wishlist for the current customer or device.
 export async function getAllWishlistItems() {
   return getWishlistItems();
 }
@@ -256,6 +268,7 @@ export const getWishlistByCidOrDevice = getWishlistItems;
 
 
 
+// Migrates anonymous device wishlist items into the logged-in customer wishlist.
 export async function syncDeviceWishlistToCustomer(
 cid,
 divid = getWishlistDeviceId())

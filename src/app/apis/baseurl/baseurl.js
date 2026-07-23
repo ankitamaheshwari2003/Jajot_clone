@@ -1,8 +1,10 @@
-﻿import axios from "axios";
+import axios from "axios";
 
+// Stores the single backend API base URL used by all shared API helpers.
 export const BASE_URL =
 "https://amazon-multi-vendor-3.onrender.com/api";
-// testing
+
+// Creates the shared Axios client so every backend API uses the same base URL.
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {

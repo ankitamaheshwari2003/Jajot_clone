@@ -107,7 +107,7 @@ export default function PremiumCategorySections() {
               })
             );
 
-            // Agar kisi card mein 4 se kam products hain, to baaki slots dummy "Coming Soon" se bharo
+            // Pads category cards with placeholders when fewer products are available.
             const items = padWithDummyItems(realItems, category.id);
 
             return {
@@ -126,7 +126,7 @@ export default function PremiumCategorySections() {
         );
 
         if (isMounted) {
-          // Ab section tabhi hide hoga jab uske paas koi bhi real product na ho
+          // Keeps only sections that contain at least one real product.
           setSections(
             builtSections.filter((section) =>
               section.items.some((item) => !item.isDummy)
@@ -217,7 +217,7 @@ export default function PremiumCategorySections() {
                 {section.items.map((item) =>
               item.isDummy ?
               (
-              // Dummy placeholder card — "Coming Soon" radiant orange text
+              // Renders a placeholder card when category products are still missing.
               <div
                 key={item.id}
                 className="overflow-hidden rounded-[18px] bg-white border border-black/5 border-dashed">

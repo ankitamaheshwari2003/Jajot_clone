@@ -9,7 +9,7 @@ import {
   getCategoryNameFromBanner,
   getVendorIdFromBanner,
 } from "../apis/banners/banners.js";
-// demo
+
 export default function FestiveOfferBanner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,7 +24,7 @@ export default function FestiveOfferBanner() {
 
   const timerRef = useRef(null);
 
-  // API se banners fetch karo
+  // Loads homepage banners from the backend banner API.
   useEffect(() => {
     let isMounted = true;
 
@@ -63,7 +63,7 @@ export default function FestiveOfferBanner() {
     };
   }, []);
 
-  // Selected category ke according banners filter karo
+  // Filters banners to the selected category when a category is active.
   const banners = selectedCategory
     ? allBanners.filter((banner) => {
         const categoryName = getCategoryNameFromBanner(banner);
@@ -74,19 +74,19 @@ export default function FestiveOfferBanner() {
       })
     : allBanners;
 
-  // Category change hone par first slide dikhao
+  // Resets the slider to the first banner when the category changes.
   useEffect(() => {
-    setIndex(0);
+    queueMicrotask(() => setIndex(0));
   }, [selectedCategory]);
 
-  // Banner list change hone par invalid index reset karo
+  // Keeps the active slide index valid when the banner list changes.
   useEffect(() => {
     if (index >= banners.length) {
-      setIndex(0);
+      queueMicrotask(() => setIndex(0));
     }
   }, [banners.length, index]);
 
-  // Auto slider
+  // Advances the banner slider automatically while multiple banners exist.
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -139,7 +139,7 @@ export default function FestiveOfferBanner() {
     });
   };
 
-  // Banner ke category aur vendor ke according shop link banao
+  // Builds the shop link for a banner category and vendor.
   const getShopLink = (banner) => {
     const categoryName = getCategoryNameFromBanner(banner);
     const vendorId = getVendorIdFromBanner(banner);

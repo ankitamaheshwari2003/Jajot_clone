@@ -19,6 +19,8 @@ import {
   Check,
   X } from
 "lucide-react";
+import { getLoggedInCid } from "../apis/customer/customer";
+import { getEndUserById, updateEndUser } from "../apis/userlogin/userlogin";
 
 const ORANGE = "#FF9900";
 
@@ -120,6 +122,17 @@ const emptyAddressForm = {
   type: "Home"
 };
 
+const emptyProfileForm = {
+  name: "",
+  lastname: "",
+  email: "",
+  mobile: "",
+  address: "",
+  city: "",
+  state: "",
+  pincode: ""
+};
+
 const NAV_SECTIONS = [
 {
   heading: "Account Settings",
@@ -146,7 +159,9 @@ export default function ProfilePage() {
   const [form, setForm] = useState(emptyAddressForm);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ email: "", mobile: "", city: "" });
+  const [profileForm, setProfileForm] = useState(emptyProfileForm);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState(null);
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -173,13 +188,56 @@ export default function ProfilePage() {
     };
   }, []);
 
+  // Fetches the latest customer details from the backend and merges them
+  // over whatever is currently in localStorage.
+  useEffect(() => {
+    const cid = getLoggedInCid();
+    if (!cid) return;
+
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const res = await getEndUserById(cid);
+        const info = res?.data?.user || res?.user;
+
+        if (!info || !isMounted) return;
+
+        setCustomer((prev) => ({
+          ...prev,
+          name: info.name || prev?.name,
+          lastname: info.lastname || prev?.lastname,
+          email: info.email || prev?.email,
+          number: info.number || prev?.number,
+          city: info.city || prev?.city,
+          state: info.state || prev?.state,
+          pincode: info.pincode || prev?.pincode,
+          address: info.address || prev?.address,
+          _id: info._id || prev?._id,
+          status: info.status || prev?.status
+        }));
+      } catch {
+        // API fail ho toh localStorage wala data hi dikhta rahega
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!customer) return;
     queueMicrotask(() => {
       setProfileForm({
+        name: customer?.name || "",
+        lastname: customer?.lastname || "",
         email: customer?.email || customer?.emailId || "",
         mobile: customer?.number || customer?.phone || customer?.mobile || "",
-        city: customer?.city || ""
+        address: customer?.address || "",
+        city: customer?.city || "",
+        state: customer?.state || "",
+        pincode: customer?.pincode || ""
       });
     });
   }, [customer]);
@@ -259,10 +317,16 @@ export default function ProfilePage() {
 
   const openProfileEdit = () => {
     setProfileForm({
+      name: customer?.name || "",
+      lastname: customer?.lastname || "",
       email: customer?.email || customer?.emailId || "",
       mobile: customer?.number || customer?.phone || customer?.mobile || "",
-      city: customer?.city || ""
+      address: customer?.address || "",
+      city: customer?.city || "",
+      state: customer?.state || "",
+      pincode: customer?.pincode || ""
     });
+    setProfileMessage(null);
     setIsEditingProfile(true);
   };
 
@@ -270,7 +334,7 @@ export default function ProfilePage() {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
 
     if (showPasswordForm) {
@@ -288,22 +352,54 @@ export default function ProfilePage() {
         setPasswordMessage({ type: "error", text: "New password and confirm password do not match." });
         return;
       }
-
-
-
     }
 
-    updateCustomerInStorage({
-      email: profileForm.email,
-      number: profileForm.mobile,
-      city: profileForm.city
-    });
+    const cid = getLoggedInCid() || customer?._id;
+    if (!cid) {
+      setProfileMessage({ type: "error", text: "Could not identify your account. Please re-login." });
+      return;
+    }
 
-    setCustomer(getCustomerFromStorage());
-    setIsEditingProfile(false);
-    setShowPasswordForm(false);
-    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    setPasswordMessage(null);
+    setSavingProfile(true);
+    setProfileMessage(null);
+
+    try {
+      const payload = {
+        name: profileForm.name,
+        lastname: profileForm.lastname,
+        email: profileForm.email,
+        number: profileForm.mobile,
+        address: profileForm.address,
+        city: profileForm.city,
+        state: profileForm.state,
+        pincode: profileForm.pincode
+      };
+
+      if (showPasswordForm && passwordForm.newPassword) {
+        payload.password = passwordForm.newPassword;
+      }
+
+      const res = await updateEndUser(cid, payload);
+      const updatedUser = res?.data?.user || res?.user;
+
+      if (updatedUser) {
+        setCustomer((prev) => ({ ...prev, ...updatedUser }));
+        updateCustomerInStorage(updatedUser);
+      }
+
+      setIsEditingProfile(false);
+      setShowPasswordForm(false);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordMessage(null);
+      setProfileMessage(null);
+    } catch (err) {
+      setProfileMessage({
+        type: "error",
+        text: err?.response?.data?.message || "Failed to update profile. Please try again."
+      });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const handleCancelProfileEdit = () => {
@@ -311,6 +407,7 @@ export default function ProfilePage() {
     setShowPasswordForm(false);
     setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setPasswordMessage(null);
+    setProfileMessage(null);
   };
 
   const handlePasswordFormChange = (field, value) => {
@@ -350,14 +447,14 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#FF9900] text-xl font-black text-black sm:h-20 sm:w-20 sm:text-2xl">
-                {getInitials(customer?.name || customer?.fullName)}
+                {getInitials(`${customer?.name || ""} ${customer?.lastname || ""}`)}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#FF9900]">
                   My Profile
                 </p>
                 <h1 className="mt-1 break-words text-xl font-black text-gray-900 sm:text-2xl">
-                  {customer?.name || customer?.fullName || "Customer"}
+                  {`${customer?.name || ""} ${customer?.lastname || ""}`.trim() || "Customer"}
                 </h1>
                 <p className="mt-1 break-all text-sm text-gray-500">
                   Customer ID: {customer?._id || customer?.id || "Not available"}
@@ -390,12 +487,12 @@ export default function ProfilePage() {
           <aside className="h-fit rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="flex min-w-0 items-center gap-3 border-b border-gray-100 p-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FF9900]/10 text-sm font-black text-[#FF9900]">
-                {getInitials(customer?.name || customer?.fullName)}
+                {getInitials(`${customer?.name || ""} ${customer?.lastname || ""}`)}
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">Hello,</p>
                 <p className="truncate text-sm font-bold text-gray-900">
-                  {customer?.name || customer?.fullName || "Customer"}
+                  {`${customer?.name || ""} ${customer?.lastname || ""}`.trim() || "Customer"}
                 </p>
               </div>
             </div>
@@ -459,6 +556,34 @@ export default function ProfilePage() {
               <form onSubmit={handleSaveProfile} className="rounded-xl border border-[#FF9900]/30 bg-[#FF9900]/5 p-4 sm:p-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
+                        <label htmlFor="profile-name" className="mb-1 block text-xs font-semibold text-gray-600">
+                          First Name
+                        </label>
+                        <input
+                      id="profile-name"
+                      type="text"
+                      value={profileForm.name}
+                      onChange={(e) => handleProfileFormChange("name", e.target.value)}
+                      placeholder="First name"
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30" />
+                    
+                      </div>
+
+                      <div>
+                        <label htmlFor="profile-lastname" className="mb-1 block text-xs font-semibold text-gray-600">
+                          Last Name
+                        </label>
+                        <input
+                      id="profile-lastname"
+                      type="text"
+                      value={profileForm.lastname}
+                      onChange={(e) => handleProfileFormChange("lastname", e.target.value)}
+                      placeholder="Last name"
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30" />
+                    
+                      </div>
+
+                      <div>
                         <label htmlFor="profile-email" className="mb-1 block text-xs font-semibold text-gray-600">
                           Email
                         </label>
@@ -487,6 +612,20 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="sm:col-span-2">
+                        <label htmlFor="profile-address" className="mb-1 block text-xs font-semibold text-gray-600">
+                          Address
+                        </label>
+                        <textarea
+                      id="profile-address"
+                      value={profileForm.address}
+                      onChange={(e) => handleProfileFormChange("address", e.target.value)}
+                      placeholder="House No., Street, Locality, Landmark"
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30 resize-none" />
+                    
+                      </div>
+
+                      <div>
                         <label htmlFor="profile-city" className="mb-1 block text-xs font-semibold text-gray-600">
                           City
                         </label>
@@ -496,6 +635,34 @@ export default function ProfilePage() {
                       value={profileForm.city}
                       onChange={(e) => handleProfileFormChange("city", e.target.value)}
                       placeholder="City"
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30" />
+                    
+                      </div>
+
+                      <div>
+                        <label htmlFor="profile-state" className="mb-1 block text-xs font-semibold text-gray-600">
+                          State
+                        </label>
+                        <input
+                      id="profile-state"
+                      type="text"
+                      value={profileForm.state}
+                      onChange={(e) => handleProfileFormChange("state", e.target.value)}
+                      placeholder="State"
+                      className="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30" />
+                    
+                      </div>
+
+                      <div>
+                        <label htmlFor="profile-pincode" className="mb-1 block text-xs font-semibold text-gray-600">
+                          Pincode
+                        </label>
+                        <input
+                      id="profile-pincode"
+                      type="text"
+                      value={profileForm.pincode}
+                      onChange={(e) => handleProfileFormChange("pincode", e.target.value)}
+                      placeholder="Pincode"
                       className="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#FF9900] focus:ring-2 focus:ring-[#FF9900]/30" />
                     
                       </div>
@@ -575,31 +742,32 @@ export default function ProfilePage() {
                         
                             </div>
                           </div>
-
-                          {passwordMessage &&
-                    <p
-                      className={`mt-3 flex items-center gap-1 text-sm font-semibold ${
-                      passwordMessage.type === "success" ? "text-green-600" : "text-red-600"}`
-                      }>
-                      
-                              {passwordMessage.type === "success" ?
-                      <Check size={14} /> :
-
-                      <X size={14} />
-                      }
-                              {passwordMessage.text}
-                            </p>
-                    }
                         </div>
                   }
                     </div>
 
+                    {(passwordMessage || profileMessage) &&
+                <p
+                  className={`mt-3 flex items-center gap-1 text-sm font-semibold ${
+                  (passwordMessage || profileMessage).type === "success" ? "text-green-600" : "text-red-600"}`
+                  }>
+                  
+                        {(passwordMessage || profileMessage).type === "success" ?
+                  <Check size={14} /> :
+
+                  <X size={14} />
+                  }
+                        {(passwordMessage || profileMessage).text}
+                      </p>
+                }
+
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <button
                     type="submit"
-                    className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00]">
+                    disabled={savingProfile}
+                    className="h-11 rounded-xl bg-[#FF9900] px-6 text-sm font-bold text-black transition hover:bg-[#e08a00] disabled:opacity-60">
                     
-                        Save Changes
+                        {savingProfile ? "Saving..." : "Save Changes"}
                       </button>
                       <button
                     type="button"
@@ -644,15 +812,6 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-lg font-black text-gray-900">Manage Addresses</h2>
-                  {!showAddressForm &&
-                <button
-                  onClick={openNewAddressForm}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#FF9900] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#e08a00]">
-                  
-                      <Plus size={16} />
-                      Add New Address
-                    </button>
-                }
                 </div>
 
                 {showAddressForm &&
@@ -797,7 +956,48 @@ export default function ProfilePage() {
                   </form>
               }
 
-                {!showAddressForm && addresses.length === 0 &&
+                {!showAddressForm && customer?.address &&
+              <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-[#fafafa] p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="inline-flex items-center rounded-full bg-[#FF9900]/10 px-2.5 py-1 text-xs font-bold text-[#FF9900]">
+                        Registered Address
+                      </span>
+                      <button
+                    onClick={() => {
+                      setActiveTab("profile");
+                      openProfileEdit();
+                    }}
+                    className="flex items-center gap-1 text-sm font-semibold text-[#FF9900] hover:underline"
+                    aria-label="Edit registered address">
+                    
+                        <Edit2 size={14} />
+                        Edit
+                      </button>
+                    </div>
+
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FF9900]/10 text-[#FF9900]">
+                        <MapPin size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          {`${customer?.name || ""} ${customer?.lastname || ""}`.trim()}
+                        </p>
+                        <p className="mt-1 max-w-full [overflow-wrap:anywhere] text-sm font-bold text-gray-900 sm:text-base">
+                          {customer.address}
+                        </p>
+                        <p className="mt-1 max-w-full [overflow-wrap:anywhere] text-sm text-gray-700">
+                          {customer?.city}, {customer?.state} - {customer?.pincode}
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-gray-800">
+                          Mobile: {customer?.number || customer?.mobile}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+              }
+
+                {!showAddressForm && addresses.length === 0 && !customer?.address &&
               <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center sm:p-10">
                     <MapPin className="mx-auto mb-3 text-[#FF9900]" size={28} />
                     <p className="text-sm font-semibold text-gray-700">No saved addresses yet</p>

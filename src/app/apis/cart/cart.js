@@ -1,6 +1,7 @@
 import { api } from "../baseurl/baseurl";
 import { getLoggedInCid } from "../customer/customer";
 
+// Returns a stable device id used for anonymous cart API requests.
 export function getCartDeviceId() {
   if (typeof window === "undefined") return "";
 
@@ -19,6 +20,7 @@ export function getCartDeviceId() {
   }
 }
 
+// Normalizes any cart API response into a plain cart item array.
 export function getApiCartList(payload) {
   try {
     if (Array.isArray(payload)) return payload;
@@ -62,6 +64,7 @@ function getApiErrorMessage(err, fallback = "Cart request failed") {
   );
 }
 
+// Returns the best product id available on a cart item.
 export function getCartProductId(item) {
   const product =
     item?.pid ||
@@ -75,6 +78,7 @@ export function getCartProductId(item) {
     : product || null;
 }
 
+// Returns the best variant id available on a cart item.
 export function getCartVariantId(item) {
   const variant =
     item?.variantId ||
@@ -86,6 +90,7 @@ export function getCartVariantId(item) {
     : variant || null;
 }
 
+// Returns the best vendor id available on a cart item.
 export function getCartVendorId(item) {
   const vendor =
     item?.vendorId ||
@@ -107,6 +112,7 @@ export function getCartVendorId(item) {
     : vendor || null;
 }
 
+// Returns the cart item's stable product or variant key.
 export function getCartProductKey(item) {
   return (
     getCartProductId(item) ||
@@ -116,10 +122,6 @@ export function getCartProductKey(item) {
   );
 }
 
-// NAYA — backend me categoryId/subcategoryId/subtosubcategoryId
-// "required" + ObjectId type hain, isliye hamesha ek valid 24-char
-// hex ObjectId hi bhejna hoga, warna "required" ya "Cast to ObjectId
-// failed" error aata hai
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
 
 function isValidObjectId(value) {
@@ -132,6 +134,7 @@ function extractId(value) {
   return isValidObjectId(id) ? id : "";
 }
 
+// Returns a valid category ObjectId from a cart item when one exists.
 export function getCartCategoryId(item) {
   return extractId(
     item?.categoryId ||
@@ -140,6 +143,7 @@ export function getCartCategoryId(item) {
   );
 }
 
+// Returns a valid subcategory ObjectId from a cart item when one exists.
 export function getCartSubcategoryId(item) {
   return extractId(
     item?.subcategoryId ||
@@ -149,6 +153,7 @@ export function getCartSubcategoryId(item) {
   );
 }
 
+// Returns a valid sub-to-subcategory ObjectId from a cart item when one exists.
 export function getCartSubToSubcategoryId(item) {
   return extractId(
     item?.subtosubcategoryId ||
@@ -158,6 +163,7 @@ export function getCartSubToSubcategoryId(item) {
   );
 }
 
+// Builds the backend payload used to update an existing cart item.
 export function buildCartUpdatePayload(
   item,
   cid = getLoggedInCid(),
@@ -174,6 +180,7 @@ export function buildCartUpdatePayload(
   };
 }
 
+// Creates a cart item through the backend cart API.
 export async function createCartItem({
   divid,
   cid = getLoggedInCid(),
@@ -209,13 +216,12 @@ export async function createCartItem({
   return api.post("/cart/create", payload);
 }
 
+// Updates a cart item through the backend cart API.
 export async function updateCartItem(id, data = {}) {
   if (!id) {
     return makeEmptyCartResponse();
   }
 
-  // FALLBACK HATAYA — same as createCartItem, ab categoryId se
-  // subcategory/subtosubcategory copy nahi hoga
   const validCategoryId = extractId(data.categoryId);
   const validSubcategoryId = extractId(data.subcategoryId);
   const validSubToSubcategoryId = extractId(data.subtosubcategoryId);
@@ -266,6 +272,7 @@ export async function updateCartItem(id, data = {}) {
   }
 }
 
+// Deletes a cart item through the backend cart API.
 export async function deleteCartItem(id) {
   if (!id) {
     return makeEmptyCartResponse();
@@ -292,6 +299,7 @@ export async function deleteCartItem(id) {
   }
 }
 
+// Removes a cart item from an in-memory list without calling the backend.
 export function removeCartItemLocally(items = [], id) {
   if (!Array.isArray(items) || !id) return items;
 
@@ -300,6 +308,7 @@ export function removeCartItemLocally(items = [], id) {
   );
 }
 
+// Fetches all cart items from the backend cart API.
 export async function getAllCartItems() {
   try {
     return await api.get("/cart/");
@@ -312,6 +321,7 @@ export async function getAllCartItems() {
   }
 }
 
+// Fetches cart items for the logged-in customer from the backend cart API.
 export async function getCustomerCartItems(
   cid = getLoggedInCid()
 ) {
@@ -351,6 +361,7 @@ export async function getCustomerCartItems(
   }
 }
 
+// Fetches cart items for the anonymous device from the backend cart API.
 export async function getDeviceCartItems(
   divid = getCartDeviceId()
 ) {
@@ -390,6 +401,7 @@ export async function getDeviceCartItems(
   }
 }
 
+// Fetches the active cart by preferring customer cart data over device cart data.
 export async function getCartItems({
   cid = getLoggedInCid(),
   divid = getCartDeviceId(),
@@ -415,6 +427,7 @@ export async function getCartItems({
   return makeEmptyCartResponse();
 }
 
+// Fetches cart items and adds resolved vendor ids for UI and checkout use.
 export async function fetchNormalizedCartItems({
   cid = getLoggedInCid(),
   divid = getCartDeviceId(),
@@ -441,6 +454,7 @@ export async function fetchNormalizedCartItems({
   }
 }
 
+// Migrates anonymous device cart items into the logged-in customer cart.
 export async function syncDeviceCartToCustomer(
   cid,
   divid = getCartDeviceId()

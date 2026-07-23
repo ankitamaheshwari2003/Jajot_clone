@@ -17,6 +17,7 @@ import { getLoggedInCid, saveCustomerSession } from "../apis/customer/customer";
 import { syncDeviceWishlistToCustomer } from "../apis/wishlist/wishlist";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import toast from "react-hot-toast";
 import {
   Heart,
   Minus,
@@ -285,7 +286,7 @@ export default function CartPage() {
 
       setLoginForm({ email: "", password: "" });
       setLoginModalOpen(false);
-      alert("Login successful. You can proceed to checkout now.");
+      toast.success("Login successful. You can proceed to checkout now.");
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
 
@@ -299,7 +300,7 @@ export default function CartPage() {
         setLoginModalOpen(false);
         setRegisterModalOpen(true);
       } else {
-        alert(message);
+        toast.error(message);
       }
     } finally {
       setLoginLoading(false);
@@ -333,9 +334,9 @@ export default function CartPage() {
       await fetchCart(cid);
 
       setRegisterModalOpen(false);
-      alert("Registration successful. You can proceed to checkout now.");
+      toast.success("Registration successful. You can proceed to checkout now.");
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed");
+      toast.error(error.response?.data?.message || "Registration failed");
     } finally {
       setRegisterLoading(false);
     }
@@ -378,12 +379,12 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
-      alert("Please add at least one product to cart before checkout.");
+      toast.error("Please add at least one product to cart before checkout.");
       return;
     }
 
     if (selectedCartItems.length === 0) {
-      alert("Please select at least one product before checkout.");
+      toast.error("Please select at least one product before checkout.");
       return;
     }
 

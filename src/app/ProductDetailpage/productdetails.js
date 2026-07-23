@@ -119,7 +119,7 @@ function mergeAttributes(baseAttributes, variantAttributes) {
   return merged;
 }
 
-export default function productDetailsPage({
+export default function ProductDetailsPage({
   initialProduct = null,
   initialProductId = ""
 }) {
@@ -953,7 +953,7 @@ export default function productDetailsPage({
                 <div className="space-y-2 text-sm">
                   {displayAttributes.map((attribute) => {
   const attributeValue = getDisplayValue(attribute.value);
-  if (!attributeValue) return null;   // 👈 khali value ho to row hi render mat karo
+  if (!attributeValue) return null;
 
   return (
     <div
@@ -1149,7 +1149,7 @@ export default function productDetailsPage({
       </main>
 
       
-              {/* Reviews section - added, rest of the page untouched */}
+              {/* Shows reviews for the selected product and variant. */}
               <div className="py-5">
                 <ReviewsSection
                   productId={product.id}

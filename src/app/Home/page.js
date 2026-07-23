@@ -8,19 +8,20 @@ import ProductGridSection from "./Productgrid";
 import ProductSlider from "./ProductSlider";
 import ShopByCategory from "./ShopByCategoryCards";
 import TrendingProductsSection from "./TrendingProductSlider";
+import { BASE_URL } from "../apis/baseurl/baseurl";
 
-const API_BASE = "https://amazon-multi-vendor-3.onrender.com";
-const FALLBACK_LIMIT = 12; // cart empty hone par max itne hi product lene hain
-const PRIMARY_COUNT = 8; // pehle slider mein max itne products
-const SECONDARY_COUNT = 4; // doosre slider mein max itne products
+const FALLBACK_LIMIT = 12;
+const PRIMARY_COUNT = 8;
+const SECONDARY_COUNT = 4;
 
-// Raw API product ko slider ke card-friendly shape mein convert karta hai
+// Builds a stable grouping key for product category-based sliders.
 function getCategoryKey(p) {
   return typeof p.categoryId === "object" && p.categoryId !== null
     ? p.categoryId._id || p.categoryId.name || "uncategorized"
     : p.categoryId || "uncategorized";
 }
 
+// Converts a raw backend product into the card shape used by sliders.
 function normalizeProduct(p) {
   const category =
     typeof p.categoryId === "object" && p.categoryId !== null
@@ -42,9 +43,7 @@ function normalizeProduct(p) {
 }
 
 export default function HomePage() {
-  // Pehla slider: "Trending Collection"
   const [primaryProducts, setPrimaryProducts] = useState([]);
-  // Dusra slider: cart categories ke hi baaki products (unique, overlap nahi)
   const [secondaryProducts, setSecondaryProducts] = useState([]);
   const [loadingSliders, setLoadingSliders] = useState(true);
 
@@ -62,7 +61,7 @@ export default function HomePage() {
 
         if (divid) {
           const recRes = await fetch(
-            `${API_BASE}/api/cart/device/${divid}/recommendations`
+            `${BASE_URL}/cart/device/${divid}/recommendations`
           );
           recJson = await recRes.json();
 
@@ -76,12 +75,11 @@ export default function HomePage() {
         let list = [];
         let cartHadItems = hasCartData;
         if (hasCartData) {
-          // Cart mein items hain -> recommendations already cart ki
-          // categories/subcategories ke hisaab se filtered aati hain
+          // Uses cart-based recommendations when the backend returns matched products.
           list = recJson.data.map(normalizeProduct);
         } else {
-          // Cart empty -> general products fallback
-          const prodRes = await fetch(`${API_BASE}/api/products`);
+          // Uses general products when the cart has no recommendation data.
+          const prodRes = await fetch(`${BASE_URL}/products`);
           const prodJson = await prodRes.json();
           const raw = Array.isArray(prodJson?.data) ? prodJson.data : [];
           list = raw.slice(0, FALLBACK_LIMIT).map(normalizeProduct);
@@ -89,9 +87,7 @@ export default function HomePage() {
 
         if (!cancelled) {
           if (cartHadItems) {
-            // Category ke hisaab se group karo — jo category sabse
-            // zyada products deti hai wo primary slider, baaki sab
-            // categories ke products secondary slider mein
+            // Splits recommendations into a primary category group and secondary category products.
             const groups = {};
             list.forEach((p) => {
               if (!groups[p.categoryKey]) groups[p.categoryKey] = [];
@@ -107,7 +103,6 @@ export default function HomePage() {
             setPrimaryProducts(primaryGroup.slice(0, PRIMARY_COUNT));
             setSecondaryProducts(otherCategoryProducts.slice(0, SECONDARY_COUNT));
           } else {
-            // Cart empty -> fallback list, koi category-split nahi
             setPrimaryProducts(list.slice(0, PRIMARY_COUNT));
             setSecondaryProducts([]);
           }

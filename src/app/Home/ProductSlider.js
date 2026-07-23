@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { BASE_URL } from "../apis/baseurl/baseurl";
 
-const API_BASE = "https://amazon-multi-vendor-3.onrender.com";
-const FALLBACK_LIMIT = 12; // cart empty hone par max itne hi product lene hain
-const MIN_DISPLAY_CARDS = 6; // slider mein kam se kam itne card dikhne chahiye (khaali na lage)
+const FALLBACK_LIMIT = 12;
+const MIN_DISPLAY_CARDS = 6;
 const PLACEHOLDER_TEXTS = [
   "Explore More",
   "Fresh Arrivals Soon",
@@ -14,7 +14,7 @@ const PLACEHOLDER_TEXTS = [
   "New Products Loading"
 ];
 
-// Raw API product ko slider ke card-friendly shape mein convert karta hai
+// Converts a raw backend product into the card shape used by the slider.
 function normalizeProduct(p) {
   const category =
     typeof p.categoryId === "object" && p.categoryId !== null
@@ -35,7 +35,7 @@ function normalizeProduct(p) {
   };
 }
 
-// Products kam hon to baaki slots ko dummy "Coming Soon" cards se bharta hai (image ke bina)
+// Pads short product lists with placeholder cards so the slider layout stays filled.
 function padWithDummyCards(list) {
   if (list.length >= MIN_DISPLAY_CARDS || list.length === 0) return list;
 
@@ -62,8 +62,7 @@ export default function ProductSlider({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Agar parent (page.js) products prop bhejta hai to wahi use karo,
-  // apna fetch mat chalao — isse 2 sliders same data 2 baar fetch nahi karenge
+  // Uses parent-provided products when the slider is rendered with external data.
   const usingExternalData = externalProducts !== undefined;
   const [products, setProducts] = useState(externalProducts ?? []);
   const [loading, setLoading] = useState(
@@ -80,16 +79,16 @@ export default function ProductSlider({
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
   };
 
-  // Parent se naye products/loading aaye to state sync kar do
+  // Syncs slider state when parent-provided products or loading status changes.
   useEffect(() => {
     if (!usingExternalData) return;
-    setProducts(externalProducts);
-    setLoading(!!externalLoading);
+    queueMicrotask(() => {
+      setProducts(externalProducts);
+      setLoading(!!externalLoading);
+    });
   }, [usingExternalData, externalProducts, externalLoading]);
 
-  // Cart mein item ho -> recommendations API se data
-  // Cart empty ho -> /api/products se (max FALLBACK_LIMIT products)
-  // Ye tabhi chalega jab parent ne products prop NAHI diya (standalone use)
+  // Loads standalone slider products from cart recommendations or the general product API.
   useEffect(() => {
     if (usingExternalData) return;
 
@@ -102,8 +101,8 @@ export default function ProductSlider({
       setLoading(true);
       try {
         if (!divid) {
-          // Device id nahi mila -> seedha general products fallback
-          const prodRes = await fetch(`${API_BASE}/api/products`);
+          // Falls back to general products when no device id exists.
+          const prodRes = await fetch(`${BASE_URL}/products`);
           const prodJson = await prodRes.json();
           const list = Array.isArray(prodJson?.data) ? prodJson.data : [];
 
@@ -114,7 +113,7 @@ export default function ProductSlider({
         }
 
         const recRes = await fetch(
-          `${API_BASE}/api/cart/device/${divid}/recommendations`
+          `${BASE_URL}/cart/device/${divid}/recommendations`
         );
         const recJson = await recRes.json();
 
@@ -131,8 +130,8 @@ export default function ProductSlider({
           return;
         }
 
-        // Cart empty -> fallback to general products list
-        const prodRes = await fetch(`${API_BASE}/api/products`);
+        // Falls back to general products when recommendations are empty.
+        const prodRes = await fetch(`${BASE_URL}/products`);
         const prodJson = await prodRes.json();
         const list = Array.isArray(prodJson?.data) ? prodJson.data : [];
 
@@ -175,7 +174,7 @@ export default function ProductSlider({
     });
   };
 
-  // Product card click -> detail page pe navigate
+  // Navigates to the selected product detail page.
   const goToProduct = (product) => {
     router.push(`/ProductDetailpage/${product.id}`);
   };
@@ -221,7 +220,7 @@ export default function ProductSlider({
         
         {displayProducts.map((product) =>
         product.isDummy ? (
-          // Dummy placeholder — image ke bina, sirf "Coming Soon" radiant orange text
+          // Renders a placeholder card when there are not enough real products.
           <div
             key={product.id}
             className="flex-shrink-0 w-[42%] sm:w-[170px] snap-start">

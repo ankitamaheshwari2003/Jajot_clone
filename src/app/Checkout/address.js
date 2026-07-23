@@ -1,45 +1,55 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { getLoggedInCid, getLoggedInCustomerInfo } from "../apis/customer/customer";
+import { getLoggedInCid } from "../apis/customer/customer";
+import { getEndUserById } from "../apis/userlogin/userlogin";
 
 const emptyForm = {
   fullName: "",
+  email: "",
   mobile: "",
   pincode: "",
-  houseNumber: "",
-  area: "",
   locality: "",
   city: "",
   state: "",
-  landmark: ""
+  landmark: "",
+  address: ""
 };
 
 export default function AddressForm({ onSave, saving }) {
   const [form, setForm] = useState(emptyForm);
 
-
-
-
   useEffect(() => {
     const cid = getLoggedInCid();
     if (!cid) return;
 
-    const info = getLoggedInCustomerInfo();
-    if (!info) return;
+    let isMounted = true;
 
-    setForm((prev) => ({
-      ...prev,
-      fullName: info.fullName || prev.fullName,
-      mobile: info.mobile || prev.mobile,
-      pincode: info.pincode || prev.pincode,
-      houseNumber: info.houseNumber || prev.houseNumber,
-      area: info.area || prev.area,
-      locality: info.locality || prev.locality,
-      city: info.city || prev.city,
-      state: info.state || prev.state,
-      landmark: info.landmark || prev.landmark
-    }));
+    (async () => {
+      try {
+        const res = await getEndUserById(cid);
+        const info = res?.data?.user || res?.user;
+
+        if (!info || !isMounted) return;
+
+        setForm((prev) => ({
+          ...prev,
+          fullName: info.name || prev.fullName,
+          email: info.email || prev.email,
+          mobile: info.number || prev.mobile,
+          pincode: info.pincode || prev.pincode,
+          city: info.city || prev.city,
+          state: info.state || prev.state,
+          address: info.address || prev.address
+        }));
+      } catch {
+        // API fail ho toh form khali/manual rehne do
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -73,6 +83,16 @@ export default function AddressForm({ onSave, saving }) {
         
 
         <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email*"
+          required
+          className="w-full h-12 border border-gray-300 rounded-md px-3 text-sm focus:outline-none focus:border-[#FF9900] focus:ring-1 focus:ring-[#FF9900]" />
+        
+
+        <input
           type="tel"
           name="mobile"
           value={form.mobile}
@@ -88,6 +108,19 @@ export default function AddressForm({ onSave, saving }) {
           ADDRESS
         </p>
 
+        <div>
+          
+          <textarea
+            id="address-fulladdress"
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="House No., Street, Locality, Landmark"
+            rows={3}
+            required
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#FF9900] focus:ring-1 focus:ring-[#FF9900] resize-none" />
+        </div>
+
         <input
           type="text"
           name="pincode"
@@ -97,36 +130,6 @@ export default function AddressForm({ onSave, saving }) {
           required
           className="w-full h-12 border border-gray-300 rounded-md px-3 text-sm focus:outline-none focus:border-[#FF9900] focus:ring-1 focus:ring-[#FF9900]" />
         
-
-        <div>
-          <input
-            type="text"
-            name="houseNumber"
-            value={form.houseNumber}
-            onChange={handleChange}
-            placeholder="House Number/Tower/Block*"
-            required
-            className="w-full h-12 border border-gray-300 rounded-md px-3 text-sm focus:outline-none focus:border-[#FF9900] focus:ring-1 focus:ring-[#FF9900]" />
-          
-          <p className="text-[11px] text-[#FF9900] mt-1">
-            *House Number will allow a doorstep delivery
-          </p>
-        </div>
-
-        <div>
-          <input
-            type="text"
-            name="area"
-            value={form.area}
-            onChange={handleChange}
-            placeholder="Address (locality, building, street)*"
-            required
-            className="w-full h-12 border border-gray-300 rounded-md px-3 text-sm focus:outline-none focus:border-[#FF9900] focus:ring-1 focus:ring-[#FF9900]" />
-          
-          <p className="text-[11px] text-[#FF9900] mt-1">
-            *Please update society/apartment details
-          </p>
-        </div>
 
         <input
           type="text"

@@ -1,5 +1,6 @@
 ﻿
 
+// Provides fallback product data for development and empty API states.
 export const rawDummyProduct = {
   productName: "Titan Neo Analog Watch",
   itemName: "Titan Neo Analog Watch for Men",
@@ -263,6 +264,7 @@ function getAttributeValue(attributes, code) {
 
 }
 
+// Converts fallback product data into the app's normalized product shape.
 export function normalizeDummyProduct(raw) {
   if (!raw) return null;
 
@@ -372,4 +374,5 @@ export function normalizeDummyProduct(raw) {
   };
 }
 
+// Exposes one normalized fallback product for product detail screens.
 export const dummyProduct = normalizeDummyProduct(rawDummyProduct);

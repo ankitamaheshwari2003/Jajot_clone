@@ -1,22 +1,16 @@
-import axios from "axios";
+import { api } from "../baseurl/baseurl";
 
-const BASE_URL = "https://amazon-multi-vendor-3.onrender.com";
-const REVIEW_ENDPOINT = `${BASE_URL}/api/product_review`;
+const REVIEW_ENDPOINT = "/product_review";
 
-/**
- * GET /api/product_review/product/:pid
- * Seedha product ke hisaab se filtered reviews backend se milte hain.
- */
+// Fetches reviews for one product directly from the product review API.
 export async function fetchProductReviewsByProduct(pid) {
-  const res = await axios.get(`${REVIEW_ENDPOINT}/product/${pid}`);
+  const res = await api.get(`${REVIEW_ENDPOINT}/product/${pid}`);
   return res;
 }
 
-/**
- * GET /api/product_review (query params ke saath) - fallback/legacy.
- */
+// Fetches reviews with optional product and variant query filters.
 export async function fetchProductReviews({ pid, variantId } = {}) {
-  const res = await axios.get(REVIEW_ENDPOINT, {
+  const res = await api.get(REVIEW_ENDPOINT, {
     params: {
       pid,
       variantId
@@ -26,54 +20,53 @@ export async function fetchProductReviews({ pid, variantId } = {}) {
   return res;
 }
 
-
+// Creates a product review and supports both JSON and image FormData payloads.
 export async function createProductReview(payload) {
   const isFormData = payload instanceof FormData;
 
-  return axios.post(REVIEW_ENDPOINT, payload, {
+  return api.post(REVIEW_ENDPOINT, payload, {
     headers: isFormData ? { "Content-Type": "multipart/form-data" } : undefined
   });
 }
 
-/** Response normalize karta hai -> hamesha array return karega */
+// Normalizes any review API response into a plain review array.
 export function getApiReviewList(data) {
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data)) return data;
   return [];
 }
 
-/** pid populated object ho ya plain id, dono case handle */
+// Returns the product id from either a populated review product or a plain id.
 export function getReviewProductId(review) {
   const pid = review?.pid;
   return pid && typeof pid === "object" ? pid._id : pid;
 }
 
+// Returns the product name when the review includes a populated product.
 export function getReviewProductName(review) {
   const pid = review?.pid;
   return pid && typeof pid === "object" ? pid.productName : "";
 }
 
-/** variantId populated object ho ya plain id, dono case handle */
+// Returns the variant id from either a populated review variant or a plain id.
 export function getReviewVariantId(review) {
   const variant = review?.variantId;
   return variant && typeof variant === "object" ? variant._id : variant;
 }
 
+// Returns the variant SKU when the review includes a populated variant.
 export function getReviewVariantSku(review) {
   const variant = review?.variantId;
   return variant && typeof variant === "object" ? variant.sku : "";
 }
 
-/** vendorId populated object ho ya plain id, dono case handle */
+// Returns the vendor id from either a populated review vendor or a plain id.
 export function getReviewVendorId(review) {
   const vendor = review?.vendorId;
   return vendor && typeof vendor === "object" ? vendor._id : vendor;
 }
 
-/**
- * Client-side safety filter: agar backend GET sab reviews bhej de
- * (bina query filter ke), to yahan se sahi product/variant ke reviews chhaante hain.
- */
+// Filters reviews on the client when the backend returns broader review data.
 export function filterReviewsForProduct(reviews, productId, variantId) {
   if (!Array.isArray(reviews)) return [];
 
@@ -83,14 +76,14 @@ export function filterReviewsForProduct(reviews, productId, variantId) {
     if (!variantId) return sameProduct;
 
     const reviewVariantId = getReviewVariantId(review);
-    // agar review mein variantId hi nahi hai to product-level match kaafi hai
+    // Keeps product-level reviews when a review has no variant id.
     const sameVariant = !reviewVariantId || String(reviewVariantId) === String(variantId);
 
     return sameProduct && sameVariant;
   });
 }
 
-/** Average rating + count nikalne ke liye helper */
+// Calculates the average rating and total review count.
 export function getReviewSummary(reviews) {
   const list = Array.isArray(reviews) ? reviews : [];
   const count = list.length;
